@@ -1,0 +1,27 @@
+{
+  "name": "@anticrm/rack",
+  "version": "0.1.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "author": "Anticrm Platfrom Contributors",
+  "license": "EPL-2.0",
+  "dependencies": {
+    "jwt-simple": "^0.5.6",
+    "trouter": "^3.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-typescript": "^7.12.1",
+    "@types/jest": "^26.0.15",
+    "@types/superagent": "^4.1.10",
+    "@types/trouter": "^3.1.0",
+    "babel-jest": "^26.6.3",
+    "jest": "^26.6.3",
+    "superagent": "^6.1.0"
+  }
+}
