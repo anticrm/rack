@@ -1,0 +1,19 @@
+{
+  "name": "@anticrm/rack-tool",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "author": "Anticrm Platfrom Contributors",
+  "license": "EPL-2.0",
+  "dependencies": {
+    "js-yaml": "^3.14.0",
+    "ts-morph": "^8.1.2"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^3.12.5",
+    "@types/node": "^14.14.6",
+    "ts-node": "^9.0.0"
+  }
+}

@@ -1,0 +1,43 @@
+
+rpc:
+  new-video:
+    auth: required
+    response:
+      type: string
+
+  transcode:
+    auth: local
+    instance-type: 
+      - cpu-optimized
+      - memory-optimized
+    parameters:
+      - name: id
+        schema:
+          type: string
+
+http:
+  /video-chunk:
+    post:
+      auth: required
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+        - name: chunk
+          in: query
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: stream
+
+# http-json-rpc:
+#   - new-video
+
+http-auth:
+  jwt:
+    type: bearer
+    bearerFormat: jwt
