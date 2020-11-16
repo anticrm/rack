@@ -17,5 +17,5 @@ import { Project } from "ts-morph"
 
 export abstract class Module {
   abstract load(config: object): void
-  configure(project: Project) {}
+  configure(project: Project): string[] { return [] }
 }

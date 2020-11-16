@@ -18,7 +18,12 @@ const config = JSON.parse('{"rpc":{"new-video":{"auth":true,"response":{"type":"
 import { configure } from '@anticrm/rack'
 import api from './api'
 
-const runtime = configure(config, { api })
+const impl = {}
+impl['/add'] = {}
+import { get as __get_add } from './http/add'
+impl['/add']['get'] = __get_add
+
+const runtime = configure(config, { api, impl })
 runtime.start()
 
 

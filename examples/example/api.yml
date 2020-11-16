@@ -1,38 +1,28 @@
 
 rpc:
-  new-video:
-    auth: required
-    response:
-      type: string
-
-  transcode:
-    auth: local
-    instance-type: 
-      - cpu-optimized
-      - memory-optimized
+  add:
     parameters:
-      - name: id
+      - name: a
         schema:
-          type: string
+          type: integer
+      - name: b
+        schema:
+          type: integer
+    response:
+      type: integer
 
 http:
-  /video-chunk:
-    post:
-      auth: required
+  /add:
+    get:
       parameters:
-        - name: id
-          in: query
-          schema:
-            type: string
-        - name: chunk
+        - name: a
           in: query
           schema:
             type: integer
-      requestBody:
-        content:
-          application/octet-stream:
-            schema:
-              type: stream
+        - name: b
+          in: query
+          schema:
+            type: integer
 
 # http-json-rpc:
 #   - new-video

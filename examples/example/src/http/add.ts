@@ -13,3 +13,4 @@
 // limitations under the License.
 //
 
+export function get(a: number, b: number): number { return a + b }

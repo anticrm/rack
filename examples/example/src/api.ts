@@ -13,23 +13,8 @@
 // limitations under the License.
 //
 
-import { Readable } from 'stream'
-
 export default class {
-  async v1 (
-    body: Readable,
-    id: string,
-    chunk: number,
-  ): Promise<void> {
-    // return this.services('redis').set(`video-${id}-${chunk}`, body)
-  }
 
-  async v2 (
-    body: Readable,
-    id: string,
-    chunk: number,
-  ): Promise<void> {
-    // return this.services('redis').set(`video-${id}-${chunk}`, body)
-  }
+  add (a: number, b: number): number { return a + b }
 
 }

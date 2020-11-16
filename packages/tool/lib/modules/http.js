@@ -53,14 +53,28 @@ class HttpModule extends types_1.Module {
         this.config = config;
     }
     configure(project) {
+        const code = [];
+        code.push('const http = {}');
+        console.log('roots', project.getRootDirectories());
         for (const endpoint in this.config) {
             const config = this.config[endpoint];
+            code.push(`http['${endpoint}'] = {}`);
             for (const method in config) {
                 const methodConfig = config[method];
                 console.log('configure', endpoint, method, methodConfig);
                 // methodConfig.apiMapping = createApiMapping(project, method, endpoint, methodConfig)
+                const sourceFile = project.getSourceFile(f => f.getFilePath().endsWith(endpoint + '.ts'));
+                if (!sourceFile)
+                    throw new Error('source file not found for endpoint ' + endpoint);
+                sourceFile.emitSync();
+                const name = endpoint.substring(1);
+                const impl = '__' + method + '_' + name;
+                code.push(`import { ${method} as ${impl} } from '${'./http' + endpoint}'`);
+                code.push(`http['${endpoint}']['${method}'] = ${impl}`);
             }
         }
+        console.log(code);
+        return code;
     }
 }
 exports.HttpModule = HttpModule;

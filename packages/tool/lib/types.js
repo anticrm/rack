@@ -16,6 +16,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Module = void 0;
 class Module {
-    configure(project) { }
+    configure(project) { return []; }
 }
 exports.Module = Module;

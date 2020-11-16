@@ -23,7 +23,7 @@ function transpile(project: Project) {
   if (!sourceFile)
     throw new Error('source file not found for endpoint ' + 'api')
 
-  console.log(sourceFile.emitSync())
+  sourceFile.emitSync()
 }
 
 export class Rpc extends Module {
@@ -36,9 +36,14 @@ export class Rpc extends Module {
   
 
   configure(project: Project) {
+    const code: string[] = []
+
     for (const func in this.config) {
       const funcConfig = this.config[func]
     }
     transpile(project)
+
+    code.push("import api from './api'")
+    return code
   }  
 }

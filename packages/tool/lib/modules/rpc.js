@@ -20,17 +20,20 @@ function transpile(project) {
     const sourceFile = project.getSourceFile(f => f.getFilePath().endsWith('api.ts'));
     if (!sourceFile)
         throw new Error('source file not found for endpoint ' + 'api');
-    console.log(sourceFile.emitSync());
+    sourceFile.emitSync();
 }
 class Rpc extends types_1.Module {
     load(config) {
         this.config = config;
     }
     configure(project) {
+        const code = [];
         for (const func in this.config) {
             const funcConfig = this.config[func];
         }
         transpile(project);
+        code.push("import api from './api'");
+        return code;
     }
 }
 exports.Rpc = Rpc;

@@ -62,16 +62,19 @@ class Configuration {
         });
     }
     configure() {
+        const code = [];
         for (const module of this.modules) {
-            module[1].configure(this.project);
+            code.push('// ' + module[0]);
+            code.push(...module[1].configure(this.project));
         }
         const sourceFile = this.project.createSourceFile("/boot.ts", writer => {
             writer
-                .writeLine("const config = JSON.parse('" + JSON.stringify(this.config) + "')").blankLine()
-                .writeLine("import { configure } from '@anticrm/rack'").blankLine()
-                .writeLine("import api from './api'").blankLine()
-                .writeLine("const runtime = configure(config, { api })").blankLine()
-                .writeLine("runtime.start()").blankLine();
+                .writeLine("const config = JSON.parse('" + JSON.stringify(this.config) + "')")
+                .writeLine("import { configure } from '@anticrm/rack'");
+            code.forEach(c => writer.writeLine(c));
+            writer
+                .writeLine("const runtime = configure(config, { api, http })")
+                .writeLine("runtime.start()");
         });
         sourceFile.emitSync();
     }
