@@ -20,7 +20,7 @@ import { configure } from '../config'
 describe("http", () => {
 
   const url = 'localhost:8080'
-  let stop
+  let stop: (() => void)[]
 
   beforeAll(() => {
     const config = {

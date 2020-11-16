@@ -51,7 +51,7 @@ export class Context {
 export type Middleware = (ctx: Context, request: Request, response: Response) => Promise<void>
 
 export class Runtime {
-  impl: Config
+  impl!: Config
   funcs: { [name: string]: (ctx: Context, args: any[]) => Promise<any> | undefined } = {}
   auth?: AuthMethod
   services: (() => () => void)[] = []

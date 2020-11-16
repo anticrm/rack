@@ -13,4 +13,3 @@
 // limitations under the License.
 //
 
-export {run} from '@oclif/command'

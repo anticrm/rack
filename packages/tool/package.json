@@ -1,19 +1,36 @@
 {
   "name": "@anticrm/rack-tool",
   "version": "0.1.0",
-  "main": "src/index.ts",
+  "bin": {
+    "rack": "./bin/run"
+  },
+  "main": "lib/index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
   },
   "author": "Anticrm Platfrom Contributors",
   "license": "EPL-2.0",
   "dependencies": {
+    "@oclif/command": "^1.8.0",
+    "@oclif/config": "^1.17.0",
+    "@oclif/plugin-help": "^3.2.0",
     "js-yaml": "^3.14.0",
     "ts-morph": "^8.1.2"
   },
   "devDependencies": {
     "@types/js-yaml": "^3.12.5",
-    "@types/node": "^14.14.6",
-    "ts-node": "^9.0.0"
+    "@types/node": "^14.14.6"
+  },
+  "files": [
+    "/bin",
+    "/lib"
+  ],
+  "oclif": {
+    "commands": "./lib/commands",
+    "bin": "rack",
+    "plugins": [
+      "@oclif/plugin-help"
+    ]
   }
 }

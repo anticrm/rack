@@ -1,3 +1,4 @@
+"use strict";
 //
 // Copyright © 2020 Anticrm Platform Contributors.
 // 
@@ -12,5 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-
-export {run} from '@oclif/command'
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Module = void 0;
+class Module {
+    configure(project) { }
+}
+exports.Module = Module;

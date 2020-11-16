@@ -89,7 +89,13 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
   //   throw new Error('Implementation not found, function: ' + funcName)
   // }
 
-  const impl = runtime.impl.http[endpoint][method]
+  const httpEndpoints = runtime.impl.http as any
+  if (!httpEndpoints)
+    throw new Error('HTTP endpoint implementations does not provided')
+  const endpointImpl = httpEndpoints[endpoint]
+  if (!httpEndpoints)
+    throw new Error('HTTP endpoint implementation does not provided ' + endpoint)
+  const impl = endpointImpl[method]
   if (!impl) {
     throw new Error('Implementation not found for ' + endpoint + ' ' + method)
   }
@@ -135,10 +141,14 @@ function createServer(router: Trouter, port: number): () => () => void {
 
     getQuery(query: string): string | string[] | undefined {
       if (!this.query) {
-        const i = this.req.url.indexOf('?')
-        if (i > -1) {
-          const qs = this.req.url.substring(i + 1)
-          this.query = parse(qs)
+        if (this.req.url) {
+          const i = this.req.url.indexOf('?')
+          if (i > -1) {
+            const qs = this.req.url.substring(i + 1)
+            this.query = parse(qs)
+          } else {
+            this.query = {}
+          }
         } else {
           this.query = {}
         }
@@ -183,6 +193,11 @@ function createServer(router: Trouter, port: number): () => () => void {
     console.log('starting http server...')
 
     const requestListener = (nodeReq: IncomingMessage, nodeRes: ServerResponse) => {
+      if (!nodeReq.url) {
+        nodeRes.writeHead(403)
+        nodeRes.end()
+        return
+      }
       const i = nodeReq.url.indexOf('?')
       const url = i === -1 ? nodeReq.url : nodeReq.url.substring(0, i)
       const route = router.find(nodeReq.method as HTTPMethod, url)
