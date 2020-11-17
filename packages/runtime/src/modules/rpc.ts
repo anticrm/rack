@@ -13,8 +13,10 @@
 // limitations under the License.
 //
 
+import { RpcService } from '../services/rpc'
 import { Config, Context, Middleware, Runtime, Request, Response } from '../types' 
 import { toCamelCase } from '../utils'
+import { JsonRpcRequest } from './jsonrpc'
 
 export const RPC_CONFIG = 'rpc'
 
@@ -71,10 +73,14 @@ export function configureRpc(config: Config, runtime: Runtime) {
 }
 
 
-export function createJsonRpcMethod(): Middleware {
-  return async (ctx: Context, request: Request, response: Response) => {
-    return request.getBody().then(jsonRpc => {
-      return ctx.invoke(jsonRpc.method, jsonRpc.params)
+export function createJsonRpcMethod() {
+  return async function (this: Context) {
+    const body = this.body as Promise<object>
+    return body.then(json => {
+      console.log('here2', json)
+      const rpcService = this.platform.getService('rpc') as RpcService
+      const jsonRpc = json as JsonRpcRequest
+      return rpcService.invoke(this.auth, jsonRpc.id, jsonRpc.method, jsonRpc.params)
     })
   }
 }

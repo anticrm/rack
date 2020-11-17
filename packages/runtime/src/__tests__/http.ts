@@ -15,7 +15,8 @@
 
 import request from 'superagent'
 import { configure } from '../config'
-
+import { Platform } from '../platform'
+import { createJsonRpcMethod } from '../modules/rpc'
 
 describe("http", () => {
 
@@ -24,6 +25,12 @@ describe("http", () => {
 
   beforeAll(() => {
     const config = {
+      services: {
+        redis: {
+          development: {},
+          production: {}
+        }
+      },
       rpc: {
         add: {
           parameters: [
@@ -40,20 +47,30 @@ describe("http", () => {
               { name: 'b', in: 'query', schema: { type: 'integer'} },
             ]
           }
+        },
+        '/json-rpc': {
+          post: {
+            requestBody: {
+              content: 'application/json'
+            }
+          }
         }
       }
     }
     const http = {
       '/add': {
         get: function(a: number, b: number): number { return a + b }
+      },
+      '/json-rpc': {
+        post: createJsonRpcMethod()
       }
     }
     const api = class {
       add(a: number, b: number): number { return a + b }
     }
 
-    const runtime = configure(config, { http, api })
-    stop = runtime.start()
+    const platform = new Platform(config, { http, api }, 'development')
+    stop = platform.start()
   })
 
   afterAll(() => {
@@ -84,6 +101,18 @@ describe("http", () => {
       .end((err, res) => {
         expect(res.status).toBe(200)
         console.log(res.text)
+        done()
+      })
+  })
+
+  it("should call add via json rpc over http", done => {
+    request
+      .post(url + '/json-rpc')
+      .send({ method: 'add', params: [5,6] })
+      .end((err, res) => {
+        console.log(err?.status)
+        console.log(res?.text)
+        expect(res.status).toBe(200)
         done()
       })
   })

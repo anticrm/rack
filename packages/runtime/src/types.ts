@@ -13,6 +13,8 @@
 // limitations under the License.
 //
 
+import { Platform } from './platform'
+
 export interface Config {
   [key: string]: object
   services: { [key: string]: ServiceConfig }
@@ -52,12 +54,16 @@ export type AuthMethod = (request: Request) => Auth | null
 
 export class Context {
   auth?: Auth
+  body?: Promise<string | object>
+  readonly platform: Platform
+
+  constructor (platform: Platform) { this.platform = platform }
 }
 
 export type Middleware = (ctx: Context, request: Request, response: Response) => Promise<void>
 
 export class Runtime {
-  impl!: Config
+  impl!: { [key: string]: object }
   funcs: { [name: string]: (ctx: Context, args: any[]) => Promise<any> | undefined } = {}
   auth?: AuthMethod
   services: (() => () => void)[] = []

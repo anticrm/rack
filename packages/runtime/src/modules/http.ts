@@ -21,6 +21,7 @@ import { parse } from 'querystring'
 import http from 'http'
 import type { IncomingMessage, ServerResponse } from 'http'
 import { RpcConfig, createValidator, Parameter } from './rpc'
+import { Platform } from '../platform'
 
 interface HttpConfig {
   [key: string]: EndpointConfig
@@ -101,8 +102,9 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
   }
   const func = (ctx: Context, args: any[]) => impl.apply(ctx, args)
 
-  const paramFunc = config.parameters.map((p, i) => getParameterFunction(p))
-  const validators = config.parameters.map(p => createValidator(p))
+  const parameters = config.parameters || []
+  const paramFunc = parameters.map((p, i) => getParameterFunction(p))
+  const validators = parameters.map(p => createValidator(p))
 
   return async (ctx: Context, req: Request, res: Response): Promise<void> => {
     try {
@@ -112,12 +114,14 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
           throw new HttpError(401, 'Authorization required')
         ctx.auth = auth
       }
+      ctx.body = req.getBody()
       const params = paramFunc.map((f, i) => validators[i](f(req)))
       const result = await func(ctx, params)
       if (!res.headersSent()) {
         res.send(result)
       }
     } catch (err) {
+      console.log(err)
       if (err instanceof HttpError) {
         res.writeHead(err.status)
         res.end()
@@ -129,7 +133,7 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
   }
 }
 
-function createServer(router: Trouter, port: number): () => () => void { 
+function createServer(platform: Platform, router: Trouter, port: number): () => () => void { 
 
   class NodeRequest implements Request {
     private req: IncomingMessage
@@ -141,10 +145,13 @@ function createServer(router: Trouter, port: number): () => () => void {
       this.body = new Promise<string>((resolve, reject) => {
         const requestBody: Buffer[] = []
         req.on('data', (chunks) => {
+          console.log('data', chunks.toString())
           requestBody.push(chunks)
         })
         req.on('end', () => {
-          resolve(Buffer.concat(requestBody).toString())
+          const data = Buffer.concat(requestBody).toString()
+          console.log('end', data)
+          resolve(data)
         })
       })
     }
@@ -220,10 +227,15 @@ function createServer(router: Trouter, port: number): () => () => void {
         nodeRes.end()
       } else {
         const middleware: Middleware = route.handlers[0]
-        const ctx = {}
+        const ctx = new Context(platform)
         const req = new NodeRequest(nodeReq)
         const res = new NodeResponse(nodeRes)
-        middleware(ctx, req, res)
+        middleware(ctx, req, res).then(res => {
+          console.log('middleware return', res)
+        })
+        .catch(err => {
+          console.log('middleware err', err)
+        })
       }
     }
     
@@ -236,7 +248,7 @@ function createServer(router: Trouter, port: number): () => () => void {
   }
 }
 
-export function configureHttp(config: Config, runtime: Runtime) {
+export function configureHttp(platform: Platform, config: Config, runtime: Runtime) {
   console.log('configure http')
   const http = config.http as HttpConfig
   const rpc = config.rpc as RpcConfig
@@ -248,9 +260,9 @@ export function configureHttp(config: Config, runtime: Runtime) {
       const methodConfig = endpointConfig[method]
       const funcName = methodConfig.map
       const funcConfig = rpc[funcName]
-      console.log('configure', endpoint, method, methodConfig, funcConfig)
+      // console.log('configure', endpoint, method, methodConfig, funcConfig)
       router.add(httpMethod(method), endpoint, createHandler(runtime, method, endpoint, methodConfig))
     }
   }
-  runtime.services.push(createServer(router, 8080))
+  runtime.services.push(createServer(platform, router, 8080))
 }

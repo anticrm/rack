@@ -14,3 +14,19 @@
 //
 
 export const JSON_RPC_METHOD_NOT_FOUND = -32601
+
+export interface JsonRpcRequest {
+  method: string
+  id?: string
+  params?: any[]
+}
+
+export interface JsonRpcResponse {
+  id?: string
+  result?: any
+  error?: { 
+    code: number
+    message: string
+    data: any
+  }
+}

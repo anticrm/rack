@@ -13,17 +13,32 @@
 // limitations under the License.
 //
 
-import { Config } from "./types"
 import redis from 'redis'
+
+import { Status, Config, Module, Runtime } from './types'
+import { configureHttp } from './modules/http'
+import { configureRpc } from './modules/rpc'
+import { RpcService } from './services/rpc'
 
 export class Platform {
   readonly config: Config
   private mode: 'development' | 'production'
   private services: { [name: string]: any } = {}
+  private runtime: Runtime
 
-  constructor(config: Config, mode: 'development' | 'production') { 
+  constructor(config: Config, impl: { [key: string]: object }, mode: 'development' | 'production') { 
     this.config = config 
     this.mode = mode
+
+    this.runtime = new Runtime()
+    this.runtime.impl = impl
+  
+    configureRpc(config, this.runtime)
+    configureHttp(this, config, this.runtime)
+  }
+
+  log(status: Status) {
+    console.log(status)
   }
 
   getServiceConfig(name: string) {
@@ -45,9 +60,19 @@ export class Platform {
           const client = redis.createClient(redisConfig)
           this.services['redis'] = client
           return client
+        case 'rpc':
+          const service = new RpcService(this)
+          this.services['rpc'] = service
+          return service
         default:
           throw new Error('Unknown service ' + name)
       }
     }
   }
+
+  start(): (() => void)[] {
+    console.log('starting platform')
+    return this.runtime.start()
+  }
+
 }
