@@ -134,8 +134,22 @@ function createServer(router: Trouter, port: number): () => () => void {
   class NodeRequest implements Request {
     private req: IncomingMessage
     private query?: NodeJS.Dict<string | string[]>
+    private body: Promise<string>
 
-    constructor(req: IncomingMessage) { this.req = req }
+    constructor(req: IncomingMessage) { 
+      this.req = req 
+      this.body = new Promise<string>((resolve, reject) => {
+        const requestBody: Buffer[] = []
+        req.on('data', (chunks) => {
+          requestBody.push(chunks)
+        })
+        req.on('end', () => {
+          resolve(Buffer.concat(requestBody).toString())
+        })
+      })
+    }
+
+    getBody(): Promise<string | object> { return this.body }
 
     getHeaders(): { [key: string]: string | undefined } { return this.req.headers as { [key: string]: string | undefined } }
 

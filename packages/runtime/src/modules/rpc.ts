@@ -13,8 +13,10 @@
 // limitations under the License.
 //
 
-import { Config, Context, Module, Runtime } from '../types' 
+import { Config, Context, Middleware, Runtime, Request, Response } from '../types' 
 import { toCamelCase } from '../utils'
+
+export const RPC_CONFIG = 'rpc'
 
 export interface RpcConfig {
   [key: string]: FuncConfig
@@ -65,5 +67,14 @@ export function configureRpc(config: Config, runtime: Runtime) {
     const funcName = toCamelCase(func)
     console.log('function', funcName)
     runtime.funcs[funcName] = createMethod(funcName, funcConfig, runtime)
+  }
+}
+
+
+export function createJsonRpcMethod(): Middleware {
+  return async (ctx: Context, request: Request, response: Response) => {
+    return request.getBody().then(jsonRpc => {
+      return ctx.invoke(jsonRpc.method, jsonRpc.params)
+    })
   }
 }

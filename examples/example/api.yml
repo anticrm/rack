@@ -9,7 +9,8 @@ rpc:
         schema:
           type: integer
     response:
-      type: integer
+      schema: 
+        type: integer
 
 http:
   /add:

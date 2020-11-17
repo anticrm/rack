@@ -1,4 +1,3 @@
-"use strict";
 //
 // Copyright © 2020 Anticrm Platform Contributors.
 // 
@@ -13,7 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.run = void 0;
-var command_1 = require("@oclif/command");
-Object.defineProperty(exports, "run", { enumerable: true, get: function () { return command_1.run; } });
+
+export const JSON_RPC_METHOD_NOT_FOUND = -32601

@@ -15,6 +15,11 @@
 
 export interface Config {
   [key: string]: object
+  services: { [key: string]: ServiceConfig }
+}
+
+interface ServiceConfig {
+  [kind: string]: { [key: string]: any }
 }
 
 export class Module {
@@ -32,6 +37,7 @@ export class Module {
 export interface Request {
   getHeaders(): { [key: string]: string | undefined }
   getQuery(query: string): string | string[] | undefined
+  getBody(): Promise<string | object>
 }
 
 export interface Response {
@@ -61,3 +67,20 @@ export class Runtime {
   }
 }
 
+export interface Status {
+  code: number
+  message: string
+  // constructor(code: number, message: string) {
+  //   this.code = code
+  //   this.message = message
+  // }
+}
+
+export class CoreError extends Error {
+  status: Status
+
+  constructor (code: number, message?: string) { 
+    super (message ?? code.toString())
+    this.status = { code, message: message ?? code.toString() }
+  }
+}
