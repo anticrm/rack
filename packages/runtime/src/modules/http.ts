@@ -14,7 +14,7 @@
 //
 
 import Trouter, { HTTPMethod } from 'trouter'
-import { Module, Runtime, Middleware, Config, Request, Response, Context } from '../types' 
+import { Module, Runtime, Middleware, Config, Request, Response, Context, Service } from '../types' 
 import { toCamelCase } from '../utils'
 import { parse } from 'querystring'
 
@@ -35,6 +35,9 @@ export interface MethodConfig {
   auth: boolean
   map: string
   parameters: HttpParameter[]
+  requestBody?: { 
+    content: string
+  }
 }
 
 interface HttpParameter extends Parameter {
@@ -81,7 +84,7 @@ function getParameterFunction(config: HttpParameter) {
   }
 }
 
-function createHandler(runtime: Runtime, method: string, endpoint: string, config: MethodConfig): Middleware {
+function createHandler(runtime: { [key: string]: object }, method: string, endpoint: string, config: MethodConfig): Middleware {
   console.log('createHandler for', config)
 
   // const funcName = toCamelCase(config.map)
@@ -90,7 +93,7 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
   //   throw new Error('Implementation not found, function: ' + funcName)
   // }
 
-  const httpEndpoints = runtime.impl.http as any
+  const httpEndpoints = runtime.http as any
   if (!httpEndpoints)
     throw new Error('HTTP endpoint implementations does not provided')
   const endpointImpl = httpEndpoints[endpoint]
@@ -106,6 +109,13 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
   const paramFunc = parameters.map((p, i) => getParameterFunction(p))
   const validators = parameters.map(p => createValidator(p))
 
+  let bodyRequired = false
+  let parseBody: boolean
+  if (config.requestBody) {
+    bodyRequired = true
+    parseBody = config.requestBody.content === 'application/json'
+  }
+
   return async (ctx: Context, req: Request, res: Response): Promise<void> => {
     try {
       if (config.auth) {
@@ -114,7 +124,10 @@ function createHandler(runtime: Runtime, method: string, endpoint: string, confi
           throw new HttpError(401, 'Authorization required')
         ctx.auth = auth
       }
-      ctx.body = req.getBody()
+      if (bodyRequired) {
+        const body = req.getBody()
+        ctx.body = parseBody ? body.then(s => JSON.parse(s as string)) : body
+      }
       const params = paramFunc.map((f, i) => validators[i](f(req)))
       const result = await func(ctx, params)
       if (!res.headersSent()) {
@@ -138,25 +151,31 @@ function createServer(platform: Platform, router: Trouter, port: number): () => 
   class NodeRequest implements Request {
     private req: IncomingMessage
     private query?: NodeJS.Dict<string | string[]>
-    private body: Promise<string>
+    private body?: Promise<string>
 
     constructor(req: IncomingMessage) { 
       this.req = req 
+    }
+
+    getBody(): Promise<string | object> { 
+      if (this.body)
+        return this.body
+
       this.body = new Promise<string>((resolve, reject) => {
         const requestBody: Buffer[] = []
-        req.on('data', (chunks) => {
+        this.req.on('data', (chunks) => {
           console.log('data', chunks.toString())
           requestBody.push(chunks)
         })
-        req.on('end', () => {
+        this.req.on('end', () => {
           const data = Buffer.concat(requestBody).toString()
           console.log('end', data)
           resolve(data)
         })
       })
-    }
 
-    getBody(): Promise<string | object> { return this.body }
+      return this.body
+    }
 
     getHeaders(): { [key: string]: string | undefined } { return this.req.headers as { [key: string]: string | undefined } }
 
@@ -201,6 +220,10 @@ function createServer(platform: Platform, router: Trouter, port: number): () => 
         case 'string':
           this.writeHead(200, { 'Content-Type': 'text/plain' })
           this.end(data.toString())
+          break
+        case 'undefined':
+          this.writeHead(200)
+          this.end()
           break
         default:
           throw new Error('unsupported data type ' + typeof data)
@@ -248,21 +271,35 @@ function createServer(platform: Platform, router: Trouter, port: number): () => 
   }
 }
 
-export function configureHttp(platform: Platform, config: Config, runtime: Runtime) {
-  console.log('configure http')
-  const http = config.http as HttpConfig
-  const rpc = config.rpc as RpcConfig
+export class HttpService implements Service {
 
-  const router = new Trouter()
-  for (const endpoint in http) {
-    const endpointConfig = http[endpoint]
-    for (const method in endpointConfig) {
-      const methodConfig = endpointConfig[method]
-      const funcName = methodConfig.map
-      const funcConfig = rpc[funcName]
-      // console.log('configure', endpoint, method, methodConfig, funcConfig)
-      router.add(httpMethod(method), endpoint, createHandler(runtime, method, endpoint, methodConfig))
+  private server!: () => () => void
+  private fStop!: () => void
+
+  configure(platform: Platform) {
+    console.log('configure http')
+    const http = platform.config.http as HttpConfig
+    const rpc = platform.config.rpc as RpcConfig
+  
+    const router = new Trouter()
+    for (const endpoint in http) {
+      const endpointConfig = http[endpoint]
+      for (const method in endpointConfig) {
+        const methodConfig = endpointConfig[method]
+        const funcName = methodConfig.map
+        const funcConfig = rpc[funcName]
+        // console.log('configure', endpoint, method, methodConfig, funcConfig)
+        router.add(httpMethod(method), endpoint, createHandler(platform.runtime, method, endpoint, methodConfig))
+      }
     }
+    this.server = createServer(platform, router, 8080)
   }
-  runtime.services.push(createServer(platform, router, 8080))
+
+  start(): void {
+    this.fStop = this.server()
+  }
+
+  stop(): void { 
+    this.fStop()
+  }
 }

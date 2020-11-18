@@ -21,7 +21,7 @@ import { createJsonRpcMethod } from '../modules/rpc'
 describe("http", () => {
 
   const url = 'localhost:8080'
-  let stop: (() => void)[]
+  let platform: Platform
 
   beforeAll(() => {
     const config = {
@@ -69,12 +69,14 @@ describe("http", () => {
       add(a: number, b: number): number { return a + b }
     }
 
-    const platform = new Platform(config, { http, api }, 'development')
-    stop = platform.start()
+    platform = new Platform(config, { http, api }, 'development')
+    platform.start('http')
+    platform.start('rpc-local')
+    platform.start('rpc-subscriber')
   })
 
   afterAll(() => {
-    stop.forEach(f => f())
+    platform.shutdown()
   })
 
   it("should return 404 when access non-existing endpoint", done => {

@@ -13,12 +13,35 @@
 // limitations under the License.
 //
 
-import { RpcPublisherService } from '../services/rpc-publisher'
+import { RedisClient } from "redis"
+import { Platform } from "../platform"
+import { JsonRpcResponse, JSON_RPC_METHOD_NOT_FOUND } from '../modules/jsonrpc'
+import { CoreError, Auth, Service } from '../types'
+
 import { Config, Context, Middleware, Runtime, Request, Response } from '../types' 
 import { toCamelCase } from '../utils'
-import { JsonRpcRequest } from './jsonrpc'
+import { JsonRpcRequest } from '../modules/jsonrpc'
 
 export const RPC_CONFIG = 'rpc'
+
+export interface RpcRequest {
+  uid: string
+  method: string
+  params: any[]
+}
+
+export interface RpcResultResponse {
+  uid: string
+  result: any
+}
+
+export interface RpcErrorResponse {
+  uid: string
+  error: {
+    code: number,
+    message: string
+  }
+}
 
 export interface RpcConfig {
   [key: string]: FuncConfig
@@ -49,10 +72,10 @@ export function createValidator(parameter: Parameter): (value: any) => any {
   }
 }
 
-function createMethod(funcName: string, config: FuncConfig, runtime: Runtime) {
+function createMethod(funcName: string, config: FuncConfig, runtime: { [key: string]: object } ) {
   const parameters = config.parameters || []
   const validators = parameters.map(p => createValidator(p))
-  const impl = (runtime.impl.api as new () => {}).prototype[funcName] as (...args: any[]) => any
+  const impl = (runtime.api as new () => {}).prototype[funcName] as (...args: any[]) => any
   if (!impl) {
     throw new Error('function implementation not provided ' + funcName)
   }
@@ -60,27 +83,29 @@ function createMethod(funcName: string, config: FuncConfig, runtime: Runtime) {
   return (ctx: Context, args: any[]) => impl.apply(ctx, args.map((arg, index) => validators[index](arg)))
 }
 
-export function configureRpc(config: Config, runtime: Runtime) {
-  console.log('configure rpc')
-  const rpc = config.rpc as RpcConfig
-  for (const func in rpc) {
-    const funcConfig = rpc[func]
-    console.log('configure', func)
-    const funcName = toCamelCase(func)
-    console.log('function', funcName)
-    runtime.funcs[funcName] = createMethod(funcName, funcConfig, runtime)
-  }
-}
+export class RpcService implements Service {
 
+  private platform!: Platform
+  private funcs: { [key: string]: (ctx: Context, args: any[]) => any } = {}
 
-export function createJsonRpcMethod() {
-  return async function (this: Context) {
-    const body = this.body as Promise<object>
-    return body.then(json => {
-      const rpcService = this.platform.getService('rpc-publisher') as RpcPublisherService
-      const jsonRpc = json as JsonRpcRequest
-      console.log('jsonrpc', jsonRpc)
-      return rpcService.invoke(this.auth, jsonRpc.id, jsonRpc.method, jsonRpc.params)
-    })
+  configure (platform: Platform) { 
+    this.platform = platform
+
+    console.log('configure rpc')
+    const rpc = platform.config.rpc as RpcConfig
+    for (const func in rpc) {
+      const funcConfig = rpc[func]
+      console.log('configure', func)
+      const funcName = toCamelCase(func)
+      console.log('function', funcName)
+      this.funcs[funcName] = createMethod(funcName, funcConfig, platform.runtime)
+    }
   }
+
+  start(): void {    
+  }
+
+  stop() {
+  }
+
 }

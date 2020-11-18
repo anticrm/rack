@@ -13,3 +13,28 @@
 // limitations under the License.
 //
 
+import { Platform } from '../platform';
+import { Service } from '../types'
+import redis from 'redis'
+
+export class RedisService implements Service {
+
+  private platform!: Platform
+
+  configure(platform: Platform) {
+    this.platform = platform
+  }
+
+  createClient() {
+    const redisConfig = this.platform.getServiceConfig('redis')
+    return redis.createClient(redisConfig)
+  }
+
+  start() {
+
+  }
+
+  stop() {
+
+  }
+}

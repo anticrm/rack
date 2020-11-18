@@ -14,27 +14,40 @@
 //
 
 import redis from 'redis'
+import { nanoid } from 'nanoid'
 
-import { Status, Config, Module, Runtime } from './types'
-import { configureHttp } from './modules/http'
-import { configureRpc } from './modules/rpc'
-import { RpcService } from './services/rpc'
+import { Status, Config, Module, Runtime, Service } from './types'
+import { HttpService } from './modules/http'
+import { RpcService } from './services/rpc-local'
+import { RedisService } from './services/redis'
+import { RpcSubscriber } from './services/rpc-subscriber'
+import { RpcPublisher } from './services/rpc-publisher'
+
+const SERVICES: { [name: string]: new () => Service } = {
+  redis: RedisService,
+  'rpc-local': RpcService,
+  'rpc-publisher': RpcPublisher,
+  'rpc-subscriber': RpcSubscriber,
+  http: HttpService
+}
 
 export class Platform {
   readonly config: Config
-  private mode: 'development' | 'production'
-  private services: { [name: string]: any } = {}
-  private runtime: Runtime
+  readonly runtime: { [key: string]: object }
 
-  constructor(config: Config, impl: { [key: string]: object }, mode: 'development' | 'production') { 
+  readonly deploymentId: string
+  readonly nodeId: string
+
+  private mode: 'development' | 'production'
+  private services: { [name: string]: Service } = {}
+
+  constructor(config: Config, runtime: { [key: string]: object }, mode: 'development' | 'production') { 
     this.config = config 
+    this.runtime = runtime
     this.mode = mode
 
-    this.runtime = new Runtime()
-    this.runtime.impl = impl
-  
-    configureRpc(config, this.runtime)
-    configureHttp(this, config, this.runtime)
+    this.deploymentId = nanoid(10)
+    this.nodeId = nanoid(10)
   }
 
   log(status: Status) {
@@ -54,25 +67,29 @@ export class Platform {
     if (service)
       return service
     else { 
-      switch(name) {
-        case 'redis':
-          const redisConfig = this.getServiceConfig('redis')
-          const client = redis.createClient(redisConfig)
-          this.services['redis'] = client
-          return client
-        case 'rpc':
-          const service = new RpcService(this)
-          this.services['rpc'] = service
-          return service
-        default:
-          throw new Error('Unknown service ' + name)
+      const ctor = SERVICES[name]
+      if (ctor) {
+        const service = new ctor()
+        service.configure(this)
+        service.start()
+        this.services[name] = service
+        return service
+      } else {
+        throw new Error('unknown service ' + name)
       }
     }
   }
 
-  start(): (() => void)[] {
-    console.log('starting platform')
-    return this.runtime.start()
+  start(name: string) {
+    this.getService(name)
+  }
+
+  shutdown() {
+    for (const name in this.services) {
+      console.log('stopping ' + name)
+      const service = this.services[name]
+      service.stop()
+    }
   }
 
 }

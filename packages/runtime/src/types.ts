@@ -90,3 +90,9 @@ export class CoreError extends Error {
     this.status = { code, message: message ?? code.toString() }
   }
 }
+
+export interface Service {
+  configure(platform: Platform): void
+  start(): void
+  stop(): void
+}
