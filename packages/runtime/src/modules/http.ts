@@ -119,10 +119,11 @@ function createHandler(runtime: { [key: string]: object }, method: string, endpo
   return async (ctx: Context, req: Request, res: Response): Promise<void> => {
     try {
       if (config.auth) {
-        const auth = runtime.auth ? runtime.auth(req) : null
-        if (!auth)
-          throw new HttpError(401, 'Authorization required')
-        ctx.auth = auth
+        // const auth = runtime.auth ? runtime.auth(req) : null
+        // if (!auth)
+        //   throw new HttpError(401, 'Authorization required')
+        // ctx.auth = auth
+        throw new Error('not implemented')
       }
       if (bodyRequired) {
         const body = req.getBody()

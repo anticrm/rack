@@ -21,6 +21,10 @@ import { sep } from 'path'
 
 import { Configuration } from '../config'
 
+import tar from 'tar-fs'
+import Docker from 'dockerode'
+import fs from 'fs'
+
 export default class Hello extends Command {
   static description = 'describe the command here'
 
@@ -39,9 +43,11 @@ hello world from ./src/hello.ts!
   async run() {
     const {args, flags} = this.parse(Hello)
 
+    console.log(__dirname)
     console.log('processing ' + args.path)
 
     const root = args.path || '.'
+    console.log('API', `${root}${sep}api.yml`)
 
     const doc = safeLoad(readFileSync(`${root}${sep}api.yml`, 'utf8')) as { [key: string]: object }
     const config = new Configuration()
@@ -51,5 +57,29 @@ hello world from ./src/hello.ts!
     
     console.log(JSON.stringify(doc))
     
+    this.docker(root)
+  }
+
+  private async docker(root: string) {
+    console.log('building docker images', root)
+    const docker = new Docker({ socketPath: '/var/run/docker.sock' })
+    const stream = tar.pack(root)
+
+    docker.buildImage(
+      stream
+    // {
+    //   context: '/Users/z2sx/rack/examples/example/',
+    //   src: ['Dockerfile']
+    // }
+    , {t: 'imagename'}, async function (err, response) {
+      if (err) {
+        console.log(err)
+      } else {
+        await new Promise((resolve, reject) => {
+          docker.modem.followProgress(response, (err: any, res: any) => err ? reject(err) : resolve(res))
+        }).then(console.log).catch(console.error)       
+      }
+    })
+
   }
 }

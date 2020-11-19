@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-import { RpcPublisherService } from '../services/rpc-publisher'
+import { RpcPublisher } from '../services/rpc-publisher'
 import { Config, Context, Middleware, Runtime, Request, Response } from '../types' 
 import { toCamelCase } from '../utils'
 import { JsonRpcRequest } from './jsonrpc'
@@ -77,7 +77,7 @@ export function createJsonRpcMethod() {
   return async function (this: Context) {
     const body = this.body as Promise<object>
     return body.then(json => {
-      const rpcService = this.platform.getService('rpc-publisher') as RpcPublisherService
+      const rpcService = this.platform.getService('rpc-publisher') as RpcPublisher
       const jsonRpc = json as JsonRpcRequest
       console.log('jsonrpc', jsonRpc)
       return rpcService.invoke(this.auth, jsonRpc.id, jsonRpc.method, jsonRpc.params)
