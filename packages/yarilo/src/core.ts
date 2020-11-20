@@ -21,6 +21,12 @@ export function add (ctx: Context): any {
   return x + y
 }
 
+export function sub (ctx: Context): any {
+  const x = ctx.single()
+  const y = ctx.single()
+  return x - y
+}
+
 export function proc(ctx: Context): any {
   const params = ctx.single() as Code
   const code = ctx.single()
@@ -33,10 +39,12 @@ export function proc(ctx: Context): any {
 
   const vm = ctx.vm
 
-  bind(code, (sym: string): Bound => {
-    return { 
-      get: (sym: string): any => vm.stack[vm.stack.length + offset[sym]],
-      set: (sym: string, value: any) => vm.stack[vm.stack.length + offset[sym]] = value
+  bind(code, (sym: string): Bound | undefined => {
+    if (offset[sym]) {
+      return { 
+        get: (sym: string): any => vm.stack[vm.stack.length + offset[sym]],
+        set: (sym: string, value: any) => vm.stack[vm.stack.length + offset[sym]] = value
+      }  
     }
   })
 
@@ -46,7 +54,31 @@ export function proc(ctx: Context): any {
     })
     const func = new Context(vm, code)
     const x = func.exec()
-    console.log(x)
+    vm.stack.length = vm.stack.length - params.length
     return x
   }
+}
+
+export function either(ctx: Context) {
+  const cond = ctx.single()
+  const ifTrue = ctx.single()
+  const ifFalse = ctx.single()
+
+  if (cond) {
+    return new Context(ctx.vm, ifTrue).exec()
+  } else {
+    return new Context(ctx.vm, ifFalse).exec()
+  }
+}
+
+export function gt(ctx: Context) {
+  const x = ctx.single()
+  const y = ctx.single()
+  return x > y
+}
+
+export function eq(ctx: Context) {
+  const x = ctx.single()
+  const y = ctx.single()
+  return x === y
 }

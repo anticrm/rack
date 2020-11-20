@@ -16,7 +16,7 @@
 import { parse } from '../parse'
 
 import { VM, Context } from '../vm'
-import { add, proc } from '../core'
+import { add, proc, gt, eq, either, sub } from '../core'
 
 describe("parse", () => {
 
@@ -48,10 +48,63 @@ describe("parse", () => {
   })
 
   it('should execute', () => {
-    const x = parse('x: proc [n] [n n] x 5')
+    const x = parse('x: proc [n] [add n 10] x 5')
     console.log(x)
     const vm = new VM()
     vm.dictionary['add'] = add
+    vm.dictionary['proc'] = proc
+    vm.bind(x)
+    const ctx = new Context(vm, x)
+    console.log(ctx.exec())
+    expect(true).toBe(true)
+  })
+
+  it('should execute', () => {
+    const x = parse('x: proc [n] [add n 10] x 5')
+    console.log(x)
+    const vm = new VM()
+    vm.dictionary['add'] = add
+    vm.dictionary['proc'] = proc
+    vm.bind(x)
+    const ctx = new Context(vm, x)
+    console.log(ctx.exec())
+    expect(true).toBe(true)
+  })
+
+  it('should execute', () => {
+    const x = parse('gt 7 8 gt 8 7 eq 7 7 eq 7 8')
+    const vm = new VM()
+    vm.dictionary['gt'] = gt
+    vm.dictionary['eq'] = eq
+    vm.bind(x)
+    const ctx = new Context(vm, x)
+    console.log(ctx.single())
+    console.log(ctx.single())
+    console.log(ctx.single())
+    console.log(ctx.single())
+    expect(true).toBe(true)
+  })
+
+  it('should execute', () => {
+    const x = parse('either gt 1 2 [5] [6]')
+    const vm = new VM()
+    vm.dictionary['gt'] = gt
+    vm.dictionary['eq'] = eq
+    vm.dictionary['either'] = either
+    vm.bind(x)
+    const ctx = new Context(vm, x)
+    console.log(ctx.single())
+    expect(true).toBe(true)
+  })
+
+  it('should execute', () => {
+    const x = parse('fib: proc [n] [either gt n 1 [add fib sub n 1 fib sub n 2] [n]] fib 20')
+    const vm = new VM()
+    vm.dictionary['gt'] = gt
+    vm.dictionary['eq'] = eq
+    vm.dictionary['either'] = either
+    vm.dictionary['add'] = add
+    vm.dictionary['sub'] = sub
     vm.dictionary['proc'] = proc
     vm.bind(x)
     const ctx = new Context(vm, x)
