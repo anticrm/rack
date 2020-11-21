@@ -1,14 +1,17 @@
 {
-  "name": "@anticrm/yarilo",
+  "name": "@anticrm/rack-mem",
   "version": "0.1.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest"
   },
   "author": "Anticrm Platfrom Contributors",
   "license": "EPL-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "redis": "^3.0.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",

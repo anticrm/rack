@@ -1,20 +1,25 @@
 {
-  "name": "@anticrm/yarilo",
+  "name": "@anticrm/rack-repl",
   "version": "0.1.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "start": "ts-node src/index.ts"
   },
   "author": "Anticrm Platfrom Contributors",
   "license": "EPL-2.0",
-  "dependencies": {},
+  "dependencies": {
+    "@anticrm/yarilo": "0.1.0"
+  },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/preset-env": "^7.12.1",
     "@babel/preset-typescript": "^7.12.1",
     "@types/jest": "^26.0.15",
     "babel-jest": "^26.6.3",
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "ts-node": "^9.0.0"
   }
 }

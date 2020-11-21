@@ -13,23 +13,25 @@
 // limitations under the License.
 //
 
-import { Context, Code, CodeItem, Word, Bound, bind } from './vm'
+import { Context, Code, CodeItem, Word, Bound, bind, PC } from './vm'
 
-export function add (ctx: Context): any {
-  const x = ctx.single()
-  const y = ctx.single()
+export function add (x: any, y: any): any {
   return x + y
 }
 
-export function sub (ctx: Context): any {
-  const x = ctx.single()
-  const y = ctx.single()
+function sub (x: any, y: any): any {
   return x - y
 }
 
-export function proc(ctx: Context): any {
-  const params = ctx.single() as Code
-  const code = ctx.single()
+function gt (x: any, y: any): any {
+  return x > y
+}
+
+function eq (x: any, y: any): any {
+  return x === y
+}
+
+export function proc(this: Context, params: Code, code: Code): any {
 
   const offset: { [key: string]: number } = {}
   params.forEach((param: CodeItem, index: number) => {
@@ -37,7 +39,7 @@ export function proc(ctx: Context): any {
     offset[word.sym] = index - params.length
   })
 
-  const vm = ctx.vm
+  const vm = this.vm
 
   bind(code, (sym: string): Bound | undefined => {
     if (offset[sym]) {
@@ -48,37 +50,42 @@ export function proc(ctx: Context): any {
     }
   })
 
-  return (ctx: Context): any => {
+  return (pc: PC): any => {
     params.forEach(item => {
-      vm.stack.push(ctx.single())      
+      vm.stack.push(pc.next())      
     })
-    const func = new Context(vm, code)
-    const x = func.exec()
+    const x = vm.exec(code)
     vm.stack.length = vm.stack.length - params.length
     return x
   }
 }
 
-export function either(ctx: Context) {
-  const cond = ctx.single()
-  const ifTrue = ctx.single()
-  const ifFalse = ctx.single()
-
-  if (cond) {
-    return new Context(ctx.vm, ifTrue).exec()
-  } else {
-    return new Context(ctx.vm, ifFalse).exec()
-  }
+function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
+  return this.vm.exec(cond ? ifTrue : ifFalse)
 }
 
-export function gt(ctx: Context) {
-  const x = ctx.single()
-  const y = ctx.single()
-  return x > y
-}
+// new-video: proc [] [
+//   id: nanoid
+//   job [get-video id | transcode | save-video id]
+//   id
+// ]
 
-export function eq(ctx: Context) {
-  const x = ctx.single()
-  const y = ctx.single()
-  return x === y
+// video-chunk: proc [id chunk final] [
+//   in | ram/wset join id ['.' chunk]
+//   if final [
+//     ram/set join id ['.' chunk ".final"] chunk
+//   ]
+// ]
+
+// get-video: proc [id /local chunk] [
+//   chunk: 0
+//   until [
+//     ram/wget join id ["." chunk] | out
+//     chunk: add chunk 1
+//     ram/get join id ["." chunk ".final"]
+//   ]  
+// ]
+
+export default { 
+  add, sub, proc, gt, eq, either
 }

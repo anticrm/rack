@@ -23,13 +23,26 @@ function isDigit(charCode: number): boolean {
 }
 
 export function parse(s: string, pos: number = 0): any[] {
+
+  function readIdent (): string {
+    let ident = ''
+
+    while (i < s.length && ' \n[](){}:;/'.indexOf(s.charAt(i)) === -1) {
+      ident += s.charAt(i)
+      i++
+    }
+
+    return ident
+  }
+
   const results = []
   let result: any[] = []
   let i = pos
   while (i < s.length) {
     switch (s.charAt(i)) {
       case ' ':
-        i++
+      case '\n':
+          i++
         break
       case ']':
         i++
@@ -66,22 +79,34 @@ export function parse(s: string, pos: number = 0): any[] {
         result.push(str)
         break
       default:
-        let ident = ''
         let kind = WordKind.Word
         const c = s.charAt(i)
-        if (c === '\'')
+        if (c === '\'') {
           kind = WordKind.Quote
-        else if (c === ':')
+          i++
+        } else if (c === ':') {
           kind = WordKind.GetWord
-
-        while (i < s.length && ' [](){}:;'.indexOf(s.charAt(i)) === -1) {
-          ident += s.charAt(i)
           i++
         }
 
+        const ident = readIdent()
+    
         if (s.charAt(i) === ':') {
           kind = WordKind.SetWord
           i++
+        }
+         else if (s.charAt(i) === '/') {
+          const path = []
+          path.push(ident)
+          i++
+          while (i < s.length) {
+            const ident = readIdent()
+            path.push(ident)
+            if (s.charAt(i) !== '/') break
+            else i++
+          }
+          result.push({path})
+          break
         }
 
         result.push(new Word(kind, ident))

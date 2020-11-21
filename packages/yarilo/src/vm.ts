@@ -13,8 +13,9 @@
 // limitations under the License.
 //
 
-type WordFunc = (ctx: Context) => any
+export type Proc = (pc: PC) => any
 type Dict = { [key: string]: any }
+
 export type Bound = { 
   get: (sym: string) => any
   set: (sym: string, value: any) => void
@@ -41,7 +42,6 @@ export class Word {
 export type CodeItem = Word | number | string | CodeItem[]
 export type Code = CodeItem[]
 
-
 export function bind(code: Code, boundFactory: (sym: string) => Bound | undefined) {
   let i = 0
   while (i < code.length) {
@@ -54,8 +54,16 @@ export function bind(code: Code, boundFactory: (sym: string) => Bound | undefine
           word.bound = bound
         }
       } else {
-        const code = item as Code
-        bind(code, boundFactory)
+        if (item.hasOwnProperty('path')) {
+          const path = (item as any).path
+          const bound = boundFactory(path[0])
+          if (bound) {
+            word.bound = bound
+          }
+        } else {
+          const code = item as Code
+          bind(code, boundFactory)
+        }
       }
     }
     i++
@@ -75,35 +83,46 @@ export class VM {
     })
   }
 
-}
-
-export class Context { 
-  vm: VM
-  code: Code
-  pc: number
-
-  constructor(vm: VM, code: Code) { 
-    this.vm = vm
-    this.code = code
-    this.pc = 0
+  exec(code: Code): any {
+    return new PC(this, code).exec()
   }
 
-  single(): any {
+}
+
+export class PC { 
+  code: Code
+  pc: number
+  vm: VM
+
+  constructor(vm: VM, code: Code) { 
+    this.code = code
+    this.pc = 0
+    this.vm = vm
+  }
+
+  next(): any {
     const item = this.code[this.pc++]
     switch (typeof item) {
       case 'object':
         const word = item as Word
         switch (word.kind) {
           case WordKind.SetWord: 
-            const x = this.single()
+            const x = this.next()
             if (!word.bound)
               throw new Error('word not bound ' + word)
             word.bound.set(word.sym, x)
             return x
           case undefined:
-            return item
+            if (item.hasOwnProperty('path')) {
+              const path = (item as any).path as string[]
+              const bound = (item as any).bound
+              if (!bound)
+                throw new Error('path not bound')
+              return path.slice(1).reduce((acc, val) => acc[val], bound.get(path[0]))
+            } else {
+              return item
+            }
           default:
-            // const f = this.vm.dictionary[word.sym]
             if (!word.bound)
               throw new Error('word not bound ' + word)
             const f = word.bound.get(word.sym)
@@ -118,8 +137,12 @@ export class Context {
   exec(): any { 
     let result
     while (this.pc < this.code.length) {
-      result = this.single()
+      result = this.next()
     }
     return result
   }
+}
+
+export interface Context {
+  vm: VM
 }
