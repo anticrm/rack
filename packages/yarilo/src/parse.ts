@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-import { Word, WordKind } from './vm'
+import { Word, WordKind, Path } from './vm'
 
 const zero = '0'.charCodeAt(0)
 const nine = '9'.charCodeAt(0)
@@ -105,7 +105,7 @@ export function parse(s: string, pos: number = 0): any[] {
             if (s.charAt(i) !== '/') break
             else i++
           }
-          result.push({path})
+          result.push(new Path(path))
           break
         }
 

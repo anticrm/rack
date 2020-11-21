@@ -15,10 +15,16 @@
 
 export type Proc = (pc: PC) => any
 type Dict = { [key: string]: any }
+type BindFactory = (sym: string) => Bound | undefined
 
 export type Bound = { 
   get: (sym: string) => any
   set: (sym: string, value: any) => void
+}
+
+abstract class Executable {
+  abstract exec(pc: PC): any
+  abstract bind(f: BindFactory): void
 }
 
 export enum WordKind { 
@@ -28,18 +34,59 @@ export enum WordKind {
   Quote
 }
 
-export class Word {
+export class Word extends Executable {
   readonly kind: WordKind
   readonly sym: string
   bound?: Bound
 
   constructor(kind: WordKind, sym: string) {
+    super ()
     this.kind = kind
     this.sym = sym
   }
+
+  exec(pc: PC): any {
+    if (!this.bound)
+      throw new Error('word not bound ' + this.sym)
+    switch (this.kind) {
+      case WordKind.SetWord: 
+        const x = pc.next()
+        this.bound.set(this.sym, x)
+        return x
+      default:
+        const f = this.bound.get(this.sym)
+        return typeof f === 'function' ? f(pc) : f
+    }
+  }
+
+  bind(f: BindFactory) {
+    const bound = f(this.sym)
+    if (bound) this.bound = bound
+  }
 }
 
-export type CodeItem = Word | number | string | CodeItem[]
+export class Path extends Executable {
+  readonly path: string[]
+  bound?: Bound
+
+  constructor(path: string[]) {
+    super()
+    this.path = path
+  }
+
+  bind(f: BindFactory) {
+    const bound = f(this.path[0])
+    if (bound) this.bound = bound
+  }
+
+  exec(pc: PC): any {
+    if (!this.bound)
+      throw new Error('path not bound')
+    return this.path.slice(1).reduce((acc, val) => acc[val], this.bound.get(this.path[0]))
+  }
+}
+
+export type CodeItem = Executable | number | string | CodeItem[]
 export type Code = CodeItem[]
 
 export function bind(code: Code, boundFactory: (sym: string) => Bound | undefined) {
@@ -47,23 +94,10 @@ export function bind(code: Code, boundFactory: (sym: string) => Bound | undefine
   while (i < code.length) {
     const item = code[i]
     if (typeof item === 'object') {
-      const word = item as Word
-      if (word.sym) {
-        const bound = boundFactory(word.sym)
-        if (bound) {
-          word.bound = bound
-        }
-      } else {
-        if (item.hasOwnProperty('path')) {
-          const path = (item as any).path
-          const bound = boundFactory(path[0])
-          if (bound) {
-            word.bound = bound
-          }
-        } else {
-          const code = item as Code
-          bind(code, boundFactory)
-        }
+      if ((item as any).bind) {
+        (item as any).bind(boundFactory)
+      } else if (Array.isArray(item)) {
+        bind(item, boundFactory)
       }
     }
     i++
@@ -104,30 +138,7 @@ export class PC {
     const item = this.code[this.pc++]
     switch (typeof item) {
       case 'object':
-        const word = item as Word
-        switch (word.kind) {
-          case WordKind.SetWord: 
-            const x = this.next()
-            if (!word.bound)
-              throw new Error('word not bound ' + word)
-            word.bound.set(word.sym, x)
-            return x
-          case undefined:
-            if (item.hasOwnProperty('path')) {
-              const path = (item as any).path as string[]
-              const bound = (item as any).bound
-              if (!bound)
-                throw new Error('path not bound')
-              return path.slice(1).reduce((acc, val) => acc[val], bound.get(path[0]))
-            } else {
-              return item
-            }
-          default:
-            if (!word.bound)
-              throw new Error('word not bound ' + word)
-            const f = word.bound.get(word.sym)
-            return typeof f === 'function' ? f(this) : f
-        }
+        return (item as any).exec ? (item as any).exec(this) : item
       case 'number':
       case 'string':
         return item
