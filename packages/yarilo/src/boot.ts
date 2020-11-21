@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 
-import { PC, Code, Proc, VM } from "./vm"
+import { PC, Code, Proc, VM, Context } from "./vm"
 import core from './core'
-import { parse } from './parse'
+import { PassThrough, Readable } from 'stream'
 
 function native(pc: PC): Proc {
   const params = pc.next() as Code
@@ -24,6 +24,28 @@ function native(pc: PC): Proc {
   return (pc: PC): any => {
     const values = params.map(param => pc.next())
     return impl.apply(pc, values)
+  }
+}
+
+function nativeAsync(pc: PC): Proc {
+  const params = pc.next() as Code
+  const impl = pc.next() as Function
+
+  return (pc: PC): any => {
+    const values = params.map(param => pc.next())
+    const out = new PassThrough()
+    return { 
+      resume: (input?: Readable): Promise<void> => {
+        const ctx = {
+          vm: pc.vm,
+          out,
+          input
+        }
+        return impl.apply(ctx, values)
+      },
+      out,
+      x: 'na'
+    }
   }
 }
 
@@ -42,6 +64,7 @@ export function boot(): VM {
   const vm = new VM()
   vm.dictionary['native'] = native
   vm.dictionary['native-infix'] = nativeInfix
+  vm.dictionary['native-async'] = nativeAsync
   core(vm)
   return vm
 }

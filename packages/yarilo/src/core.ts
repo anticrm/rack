@@ -13,8 +13,9 @@
 // limitations under the License.
 //
 
-import { Context, Code, CodeItem, Word, Bound, bind, PC, VM } from './vm'
+import { Context, Code, CodeItem, Word, Bound, bind, PC, VM, Suspend } from './vm'
 import { parse } from './parse'
+import { Writable, Readable, pipeline, PassThrough } from 'stream'
 
 export function add (x: any, y: any): any {
   return x + y
@@ -67,13 +68,40 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
 
 // S T R E A M S
 
-function write(this: Context, value: string) {
+function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
+  if (!left.out)
+    throw new Error('no output from left')
+  const pass = new PassThrough()
+  pipeline(left.out, pass, (err: Error | null) => {
+  })
 
+  return {
+    resume: async (input?: Readable): Promise<void> => {
+      const lp = left.resume(input)
+      const rp = right.resume(pass)
+      const x = Promise.all([lp, rp]) as unknown as Promise<void>
+      return x
+    },
+    out: right.out,
+  }  
+}
+
+async function write(this: Context, value: string) {
+  this.out.write(value)
+  this.out.end()
+}
+
+async function passthrough(this: Context) {
+  for await (const chunk of this.input) {
+    console.log('writing', chunk)
+    this.out.write(chunk)
+  }
+  console.log('PASSED')
 }
 
 // new-video: proc [] [
 //   id: nanoid
-//   job [get-video id | transcode | save-video id]
+//   job [get-video id] | [transcode] | [save-video id]
 //   id
 // ]
 
@@ -94,7 +122,8 @@ function write(this: Context, value: string) {
 // ]
 
 const core = { 
-  add, sub, proc, gt, eq, either
+  add, sub, proc, gt, eq, either,
+  write, passthrough, pipe
 }
 
 const coreY = `
@@ -108,6 +137,10 @@ eq: native [x y] core/eq
 
 proc: native [params code] core/proc
 either: native [cond ifTrue ifFalse] core/either
+
+write: native-async [value] core/write
+passthrough: native-async [] core/passthrough
+pipe: native [left right] core/pipe
 `
 
 export default function (vm: VM) {

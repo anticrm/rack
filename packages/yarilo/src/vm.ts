@@ -13,9 +13,16 @@
 // limitations under the License.
 //
 
+import { Readable, Writable } from 'stream'
+
 export type Proc = (pc: PC) => any
 type Dict = { [key: string]: any }
 type BindFactory = (sym: string) => Bound | undefined
+
+export type Suspend = { 
+  resume: (input?: Readable) => Promise<void>
+  out?: Readable
+}
 
 export type Bound = { 
   get: (sym: string) => any
@@ -182,4 +189,6 @@ export class PC {
 
 export interface Context {
   vm: VM
+  input: Readable
+  out: Writable
 }

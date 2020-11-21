@@ -76,7 +76,9 @@ export function parse(s: string, pos: number = 0): any[] {
       case '"':
         let str = ""
         while (++i < s.length && s.charAt(i) !== '"')
+          str += s.charAt(i) 
         result.push(str)
+        i++
         break
       default:
         let kind = WordKind.Word

@@ -15,21 +15,25 @@
 
 import { parse } from '../parse'
 
-import { VM, PC } from '../vm'
+import { VM, PC, Suspend } from '../vm'
 import { boot } from '../boot'
+import { Readable } from 'stream'
 
 describe("parse", () => {
 
 
   it('should parse', () => {
     const x = parse('add 1 2')
-    console.log(x)
     expect(x[1]).toBe(1)
   })
 
   it('should parse', () => {
+    const x = parse('add "1" "2"')
+    expect(x[1]).toBe("1")
+  })
+
+  it('should parse', () => {
     const x = parse('add 1 core/data')
-    console.log(x)
     expect(true).toBe(true)
   })
 
@@ -99,6 +103,21 @@ describe("parse", () => {
     const vm = boot()
     vm.bind(x)
     expect(vm.exec(x)).toBe(6765)
+  })
+
+  it('should execute', () => {
+    const x = parse('add add 1 2 3')
+    const vm = boot()
+    vm.bind(x)
+    expect(vm.exec(x)).toBe(6)
+  })
+
+  it('should execute', async (done) => {
+    const x = parse('pipe write "7777" passthrough')
+    const vm = boot()
+    vm.bind(x)
+    const suspend: Suspend = vm.exec(x)
+    suspend.resume().then(res => { done() })
   })
 
 })
