@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-import { Word, WordKind, Path } from './vm'
+import { Word, WordKind, Path, Braces } from './vm'
 
 const zero = '0'.charCodeAt(0)
 const nine = '9'.charCodeAt(0)
@@ -56,6 +56,17 @@ export function parse(s: string, pos: number = 0): any[] {
         results.push(result)
         result = []
         break
+      case ')':
+        i++
+        const braces = result
+        result = results.pop() as any[]
+        result.push(new Braces(braces))
+        break
+      case '(':
+        i++
+        results.push(result)
+        result = []
+        break  
       case '0':
       case '1':
       case '2':

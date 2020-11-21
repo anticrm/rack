@@ -51,7 +51,7 @@ export class Word extends Executable {
     super ()
     this.kind = kind
     this.sym = sym
-    this.infix = '+-|'.indexOf(sym.charAt(0)) !== -1
+    this.infix = '+-|*'.indexOf(sym.charAt(0)) !== -1
   }
 
   exec(pc: PC): any {
@@ -65,19 +65,13 @@ export class Word extends Executable {
       default:
         const f = this.bound.get(this.sym)
         if (this.infix) {
-          console.log('vm', pc.vm.result)
+          if (typeof f !== 'function') 
+            throw new Error('infix must be a function')
+          return f(pc, pc.vm.result, pc.nextNoInfix())
+        } else {
+          return typeof f === 'function' ? f(pc) : f
         }
-        return typeof f === 'function' ? f(pc) : f
     }
-  }
-
-  execInfix(pc: PC, first: any) {
-    if (!this.bound)
-      throw new Error('word not bound ' + this.sym)
-    const f = this.bound.get(this.sym)
-    if (typeof f !== 'function') 
-      throw new Error('infix must be a function')
-    return f(pc, first) 
   }
 
   bind(f: BindFactory) {
@@ -104,6 +98,23 @@ export class Path extends Executable {
     if (!this.bound)
       throw new Error('path not bound')
     return this.path.slice(1).reduce((acc, val) => acc[val], this.bound.get(this.path[0]))
+  }
+}
+
+export class Braces extends Executable {
+  private code: Code
+
+  constructor(code: Code) {
+    super()
+    this.code = code
+  }
+
+  bind(f: BindFactory) {
+    bind(this.code, f)
+  }
+
+  exec(pc: PC): any {
+    return pc.vm.exec(this.code)
   }
 }
 
@@ -156,23 +167,27 @@ export class PC {
     this.vm = vm
   }
 
-  next(): any {
+  nextNoInfix() {
     const item = this.code[this.pc++]
-    let result
     switch (typeof item) {
       case 'object':
-        result = (item as any).exec ? (item as any).exec(this) : item
-        break
+        return (item as any).exec ? (item as any).exec(this) : item
       case 'number':
       case 'string':
-        result = item
-        break
+        return item
     }
+  }
+
+  next(): any {
+    const result = this.nextNoInfix()
+    this.vm.result = result
     if (this.pc < this.code.length) {
       const probe = this.code[this.pc] as any
       if (probe.infix && probe.kind === WordKind.Word) {
         this.pc++
-        result = probe.execInfix(this, result)
+        const infix = probe.exec(this)
+        this.vm.result = infix
+        return infix
       }
     }
     return result

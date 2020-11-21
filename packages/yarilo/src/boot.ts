@@ -53,9 +53,12 @@ function nativeInfix(pc: PC) {
   const params = pc.next() as Code
   const impl = pc.next() as Function
 
-  return (pc: PC, first: any): any => {
-    const values = [first]
-    params.slice(1).forEach(p => values.push(pc.next()))
+  return (pc: PC, first: any, second: any): any => {
+    if (!first) {
+      console.log(pc)
+      throw new Error('first not defined')
+    }
+    const values = [first, second]
     return impl.apply(pc, values)
   }
 }

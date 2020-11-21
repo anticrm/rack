@@ -25,6 +25,10 @@ function sub (x: any, y: any): any {
   return x - y
 }
 
+function mul (x: any, y: any): any {
+  return x * y
+}
+
 function gt (x: any, y: any): any {
   return x > y
 }
@@ -69,6 +73,8 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
 // S T R E A M S
 
 function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
+  console.log('left', left)
+  console.log('right', right)
   if (!left.out)
     throw new Error('no output from left')
   const pass = new PassThrough()
@@ -87,6 +93,7 @@ function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
 }
 
 async function write(this: Context, value: string) {
+  console.log('WRITING')
   this.out.write(value)
   this.out.end()
 }
@@ -122,18 +129,20 @@ async function passthrough(this: Context) {
 // ]
 
 const core = { 
-  add, sub, proc, gt, eq, either,
+  add, sub, mul, proc, gt, eq, either,
   write, passthrough, pipe
 }
 
 const coreY = `
 add: native [x y] core/add
 sub: native [x y] core/sub
+mul: native [x y] core/mul
 
 gt: native [x y] core/gt
 eq: native [x y] core/eq
 
 +: native-infix [x y] core/add
+*: native-infix [x y] core/mul
 
 proc: native [params code] core/proc
 either: native [cond ifTrue ifFalse] core/either
@@ -141,6 +150,8 @@ either: native [cond ifTrue ifFalse] core/either
 write: native-async [value] core/write
 passthrough: native-async [] core/passthrough
 pipe: native [left right] core/pipe
+
+|: native-infix [left right] core/pipe
 `
 
 export default function (vm: VM) {
