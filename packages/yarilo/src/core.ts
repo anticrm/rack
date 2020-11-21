@@ -13,7 +13,8 @@
 // limitations under the License.
 //
 
-import { Context, Code, CodeItem, Word, Bound, bind, PC } from './vm'
+import { Context, Code, CodeItem, Word, Bound, bind, PC, VM } from './vm'
+import { parse } from './parse'
 
 export function add (x: any, y: any): any {
   return x + y
@@ -64,6 +65,12 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
   return this.vm.exec(cond ? ifTrue : ifFalse)
 }
 
+// S T R E A M S
+
+function write(this: Context, value: string) {
+  
+}
+
 // new-video: proc [] [
 //   id: nanoid
 //   job [get-video id | transcode | save-video id]
@@ -86,6 +93,24 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
 //   ]  
 // ]
 
-export default { 
+const core = { 
   add, sub, proc, gt, eq, either
+}
+
+const coreY = `
+add: native [x y] core/add
+sub: native [x y] core/sub
+
+gt: native [x y] core/gt
+eq: native [x y] core/eq
+
+proc: native [params code] core/proc
+either: native [cond ifTrue ifFalse] core/either
+`
+
+export default function (vm: VM) {
+  vm.dictionary['core'] = core
+  const bootCode = parse(coreY)
+  vm.bind(bootCode)
+  vm.exec(bootCode)
 }

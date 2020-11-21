@@ -13,5 +13,5 @@
 // limitations under the License.
 //
 
-export { VM } from './vm'
+export { VM, Context } from './vm'
 export { parse } from './parse'

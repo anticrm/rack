@@ -27,23 +27,9 @@ function native(pc: PC): Proc {
   }
 }
 
-const bootSeq = `
-add: native [x y] core/add
-sub: native [x y] core/sub
-
-gt: native [x y] core/gt
-eq: native [x y] core/eq
-
-proc: native [params code] core/proc
-either: native [cond ifTrue ifFalse] core/either
-`
-
 export function boot(): VM {
   const vm = new VM()
   vm.dictionary['native'] = native
-  vm.dictionary['core'] = core
-  const bootCode = parse(bootSeq)
-  vm.bind(bootCode)
-  vm.exec(bootCode)
+  core(vm)
   return vm
 }

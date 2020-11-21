@@ -13,3 +13,23 @@
 // limitations under the License.
 //
 
+import { Context, VM, parse } from '@anticrm/yarilo'
+
+export function set (this: Context, key: string): any {
+  return this.
+}
+
+const mem = { 
+  set
+}
+
+const memY = `
+set: native [key] mem/add
+`
+
+export default function (vm: VM) {
+  vm.dictionary['mem'] = mem
+  const bootCode = parse(memY)
+  vm.bind(bootCode)
+  vm.exec(bootCode)
+}
