@@ -49,6 +49,20 @@ describe("parse", () => {
   })
 
   it('should execute', () => {
+    const x = parse('1 + 2')
+    const vm = boot()
+    vm.bind(x)
+    expect(vm.exec(x)).toBe(3)
+  })
+
+  it('should execute', () => {
+    const x = parse('1 + 2 + 3')
+    const vm = boot()
+    vm.bind(x)
+    expect(vm.exec(x)).toBe(6)
+  })
+
+  it('should execute', () => {
     const x = parse('x: 7 y: 8 add x y')
     const vm = boot()
     vm.bind(x)
@@ -86,6 +100,5 @@ describe("parse", () => {
     vm.bind(x)
     expect(vm.exec(x)).toBe(6765)
   })
-
 
 })

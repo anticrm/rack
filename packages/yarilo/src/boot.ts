@@ -27,9 +27,21 @@ function native(pc: PC): Proc {
   }
 }
 
+function nativeInfix(pc: PC) {
+  const params = pc.next() as Code
+  const impl = pc.next() as Function
+
+  return (pc: PC, first: any): any => {
+    const values = [first]
+    params.slice(1).forEach(p => values.push(pc.next()))
+    return impl.apply(pc, values)
+  }
+}
+
 export function boot(): VM {
   const vm = new VM()
   vm.dictionary['native'] = native
+  vm.dictionary['native-infix'] = nativeInfix
   core(vm)
   return vm
 }

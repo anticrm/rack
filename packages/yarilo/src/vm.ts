@@ -38,11 +38,13 @@ export class Word extends Executable {
   readonly kind: WordKind
   readonly sym: string
   bound?: Bound
+  private infix: boolean
 
   constructor(kind: WordKind, sym: string) {
     super ()
     this.kind = kind
     this.sym = sym
+    this.infix = '+-|'.indexOf(sym.charAt(0)) !== -1
   }
 
   exec(pc: PC): any {
@@ -55,8 +57,20 @@ export class Word extends Executable {
         return x
       default:
         const f = this.bound.get(this.sym)
+        if (this.infix) {
+          console.log('vm', pc.vm.result)
+        }
         return typeof f === 'function' ? f(pc) : f
     }
+  }
+
+  execInfix(pc: PC, first: any) {
+    if (!this.bound)
+      throw new Error('word not bound ' + this.sym)
+    const f = this.bound.get(this.sym)
+    if (typeof f !== 'function') 
+      throw new Error('infix must be a function')
+    return f(pc, first) 
   }
 
   bind(f: BindFactory) {
@@ -107,6 +121,7 @@ export function bind(code: Code, boundFactory: (sym: string) => Bound | undefine
 export class VM {
   dictionary: Dict = {}
   stack: any[] = []
+  result: any
 
   bind(code: Code) {
     bind(code, () => {
@@ -136,13 +151,24 @@ export class PC {
 
   next(): any {
     const item = this.code[this.pc++]
+    let result
     switch (typeof item) {
       case 'object':
-        return (item as any).exec ? (item as any).exec(this) : item
+        result = (item as any).exec ? (item as any).exec(this) : item
+        break
       case 'number':
       case 'string':
-        return item
+        result = item
+        break
     }
+    if (this.pc < this.code.length) {
+      const probe = this.code[this.pc] as any
+      if (probe.infix && probe.kind === WordKind.Word) {
+        this.pc++
+        result = probe.execInfix(this, result)
+      }
+    }
+    return result
   }
 
   exec(): any { 

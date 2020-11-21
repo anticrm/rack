@@ -109,7 +109,8 @@ export function parse(s: string, pos: number = 0): any[] {
           break
         }
 
-        result.push(new Word(kind, ident))
+        const word = new Word(kind, ident)
+        result.push(word)
         break
     }
   }

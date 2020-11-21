@@ -68,7 +68,7 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
 // S T R E A M S
 
 function write(this: Context, value: string) {
-  
+
 }
 
 // new-video: proc [] [
@@ -103,6 +103,8 @@ sub: native [x y] core/sub
 
 gt: native [x y] core/gt
 eq: native [x y] core/eq
+
++: native-infix [x y] core/add
 
 proc: native [params code] core/proc
 either: native [cond ifTrue ifFalse] core/either
