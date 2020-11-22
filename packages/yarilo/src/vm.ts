@@ -51,7 +51,7 @@ export class Word extends Executable {
     super ()
     this.kind = kind
     this.sym = sym
-    this.infix = '+-|*'.indexOf(sym.charAt(0)) !== -1
+    this.infix = '+-|*>='.indexOf(sym.charAt(0)) !== -1
   }
 
   exec(pc: PC): any {
@@ -168,19 +168,23 @@ export class PC {
   }
 
   nextNoInfix() {
+    let result
     const item = this.code[this.pc++]
     switch (typeof item) {
       case 'object':
-        return (item as any).exec ? (item as any).exec(this) : item
+        result = (item as any).exec ? (item as any).exec(this) : item
+        break
       case 'number':
       case 'string':
-        return item
+        result = item
+        break
     }
+    this.vm.result = result
+    return result
   }
 
   next(): any {
     const result = this.nextNoInfix()
-    this.vm.result = result
     if (this.pc < this.code.length) {
       const probe = this.code[this.pc] as any
       if (probe.infix && probe.kind === WordKind.Word) {

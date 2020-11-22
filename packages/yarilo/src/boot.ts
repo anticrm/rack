@@ -63,10 +63,6 @@ function nativeInfix(pc: PC) {
   const impl = pc.next() as Function
 
   return (pc: PC, first: any, second: any): any => {
-    if (!first) {
-      console.log(pc)
-      throw new Error('first not defined')
-    }
     const values = [first, second]
     return impl.apply(pc, values)
   }

@@ -134,7 +134,11 @@ gt: native [x y] core/gt
 eq: native [x y] core/eq
 
 +: native-infix [x y] core/add
+-: native-infix [x y] core/sub
 *: native-infix [x y] core/mul
+
+>: native-infix [x y] core/gt
+=: native-infix [x y] core/eq
 
 proc: native [params code] core/proc
 either: native [cond ifTrue ifFalse] core/either

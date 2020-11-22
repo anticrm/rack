@@ -21,7 +21,6 @@ import { Readable } from 'stream'
 
 describe("parse", () => {
 
-
   it('should parse', () => {
     const x = parse('add 1 2')
     expect(x[1]).toBe(1)
@@ -120,6 +119,13 @@ describe("parse", () => {
   })
 
   it('should execute', () => {
+    const x = parse('fib: proc [n] [either n > 1 [(fib n - 1) + (fib n - 2)] [n]] fib 20')
+    const vm = boot()
+    vm.bind(x)
+    expect(vm.exec(x)).toBe(6765)
+  })
+
+  it('should execute', () => {
     const x = parse('add add 1 2 3')
     const vm = boot()
     vm.bind(x)
@@ -138,7 +144,6 @@ describe("parse", () => {
     const x = parse('(write "7777") | passthrough | passthrough')
     const vm = boot()
     vm.bind(x)
-    console.log(vm.exec(x))
     const suspend: Suspend = vm.exec(x)
     suspend.resume().then(res => { done() })
   })
