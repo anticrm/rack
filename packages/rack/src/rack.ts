@@ -13,23 +13,24 @@
 // limitations under the License.
 //
 
-import { Context, VM, parse } from '@anticrm/yarilo'
+import { VM, parse } from '@anticrm/yarilo'
 
-export function set (this: Context, key: string): any {
-  return this.
+
+function createModule() {
+  return { 
+    getServiceConfig (service: string) {
+      return ({} as any)[service]
+    }
+  }
 }
 
-const mem = { 
-  set
-}
-
-const memY = `
-set: native [key] mem/add
+const rackY = `
+get-service-config: native [service] rack/getServiceConfig
 `
 
 export default function (vm: VM) {
-  vm.dictionary['mem'] = mem
-  const bootCode = parse(memY)
+  vm.dictionary['rack'] = createModule()
+  const bootCode = parse(rackY)
   vm.bind(bootCode)
   vm.exec(bootCode)
 }

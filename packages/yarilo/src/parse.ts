@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-import { Word, WordKind, Path, Braces } from './vm'
+import { Word, WordKind, Path, Braces, VM } from './vm'
 
 const zero = '0'.charCodeAt(0)
 const nine = '9'.charCodeAt(0)
@@ -128,4 +128,10 @@ export function parse(s: string, pos: number = 0): any[] {
     }
   }
   return result
+}
+
+export function parseAndExec(vm: VM, code: string) {
+  const x = parse(code)
+  vm.bind(x)
+  return vm.exec(x)
 }

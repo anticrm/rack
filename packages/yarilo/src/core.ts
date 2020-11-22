@@ -73,8 +73,6 @@ function either(this: Context, cond: any, ifTrue: Code, ifFalse: Code) {
 // S T R E A M S
 
 function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
-  console.log('left', left)
-  console.log('right', right)
   if (!left.out)
     throw new Error('no output from left')
   const pass = new PassThrough()
@@ -82,12 +80,7 @@ function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
   })
 
   return {
-    resume: async (input?: Readable): Promise<void> => {
-      const lp = left.resume(input)
-      const rp = right.resume(pass)
-      const x = Promise.all([lp, rp]) as unknown as Promise<void>
-      return x
-    },
+    resume: async (input?: Readable) => Promise.all([left.resume(input), right.resume(pass)]) as unknown as Promise<void>,
     out: right.out,
   }  
 }
@@ -95,7 +88,6 @@ function pipe(this: Context, left: Suspend, right: Suspend): Suspend {
 async function write(this: Context, value: string) {
   console.log('WRITING')
   this.out.write(value)
-  this.out.end()
 }
 
 async function passthrough(this: Context) {

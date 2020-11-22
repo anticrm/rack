@@ -41,10 +41,19 @@ function nativeAsync(pc: PC): Proc {
           out,
           input
         }
-        return impl.apply(ctx, values)
+        return new Promise((resolve, reject) => {
+          impl.apply(ctx, values)
+            .then(() => {
+              out.end()
+              resolve()
+            })
+            .catch((err: Error) => {
+              out.end()
+              reject(err)
+            })
+        })
       },
-      out,
-      x: 'na'
+      out
     }
   }
 }

@@ -135,7 +135,7 @@ describe("parse", () => {
   })
 
   it('should execute', async (done) => {
-    const x = parse('(write "7777") | (passthrough)')
+    const x = parse('(write "7777") | passthrough | passthrough')
     const vm = boot()
     vm.bind(x)
     console.log(vm.exec(x))

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "start": "ts-node src/index.ts"
+    "start": "NODE_OPTIONS=--unhandled-rejections=strict ts-node src/index.ts"
   },
   "author": "Anticrm Platfrom Contributors",
   "license": "EPL-2.0",

@@ -24,11 +24,21 @@ const node = new Node()
 node.boot()
 
 const evalFunction = (code: string, context: object, file: string, cb: (err: Error | null, result: any) => void) => {
-  try {
-    const result = node.exec(code)
-    cb(null, result)
-  } catch(err) {
-    cb(err, undefined)
+
+  const result = node.exec(code)
+  if (result && result.resume) {
+    result.resume()
+      .then((res: any) => {cb(null, res)})
+      .catch((err: Error) => {cb(err, undefined)})
+
+    ;(async function readStream() {
+      for await (const chunk of result.out) {
+        console.log(chunk)
+      }
+    })()
+      
+  } else {
+    cb (null, result)
   }
 }
 
@@ -38,15 +48,15 @@ const options = {
   eval: evalFunction
 }
 
-net.createServer((socket) => {
-  repl.start({
-    ...options,
-    input: socket,
-    output: socket
-  }).on('exit', () => {
-    socket.end();
-  })
-}).listen(5001)
+// net.createServer((socket) => {
+//   repl.start({
+//     ...options,
+//     input: socket,
+//     output: socket
+//   }).on('exit', () => {
+//     socket.end();
+//   })
+// }).listen(5001)
 
 const instance = repl.start(options)
 

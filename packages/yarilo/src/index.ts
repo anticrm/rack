@@ -14,4 +14,5 @@
 //
 
 export { VM, Context } from './vm'
-export { parse } from './parse'
+export { parse, parseAndExec } from './parse'
+export { boot } from './boot'

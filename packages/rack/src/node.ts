@@ -13,7 +13,9 @@
 // limitations under the License.
 //
 
-import { VM, parse } from '@anticrm/yarilo'
+import { VM, parse, boot } from '@anticrm/yarilo'
+import rackModule from './rack'
+import memModule from '@anticrm/rack-mem'
 
 export class Node {
   private vm!: VM
@@ -21,7 +23,9 @@ export class Node {
   boot () {
     console.log('starting node boot sequence...')
     console.log('creating yarilo vm...')
-    this.vm = new VM()
+    this.vm = boot()
+    rackModule(this.vm)
+    memModule(this.vm)
   }
 
   exec(code: string): any {
