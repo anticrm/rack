@@ -19,6 +19,7 @@ import memModule from '@anticrm/rack-mem'
 
 export class Node {
   private vm!: VM
+  private deployments: { [key: string]: VM }  = {}
 
   boot () {
     console.log('starting node boot sequence...')

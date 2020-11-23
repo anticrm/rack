@@ -24,19 +24,21 @@ const node = new Node()
 node.boot()
 
 const evalFunction = (code: string, context: object, file: string, cb: (err: Error | null, result: any) => void) => {
-
   const result = node.exec(code)
   if (result && result.resume) {
+    let promiseResult
     result.resume()
-      .then((res: any) => {cb(null, res)})
+      .then(async (res: any) => {
+        async function readStream() {
+          for await (const chunk of result.out) {
+            console.log(chunk)
+          }
+        }
+        await readStream()
+        cb(null, res)
+      })
       .catch((err: Error) => {cb(err, undefined)})
 
-    ;(async function readStream() {
-      for await (const chunk of result.out) {
-        console.log(chunk)
-      }
-    })()
-      
   } else {
     cb (null, result)
   }

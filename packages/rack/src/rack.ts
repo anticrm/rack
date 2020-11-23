@@ -15,7 +15,6 @@
 
 import { VM, parse } from '@anticrm/yarilo'
 
-
 function createModule() {
   return { 
     getServiceConfig (service: string) {
@@ -26,6 +25,8 @@ function createModule() {
 
 const rackY = `
 get-service-config: native [service] rack/getServiceConfig
+get-deployments: proc [] [get "deployments"]
+new-deployment:
 `
 
 export default function (vm: VM) {

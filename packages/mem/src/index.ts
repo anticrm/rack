@@ -46,14 +46,36 @@ function createModule() {
             reject(new Error('key not found ' + key))
           }
         })  
-      })
+      })  
+    },
+    rpush (this: Context, key: string, value: string) {
+      return getClient(this.vm).rpush(key, value)
+    },
+    lpush (this: Context, key: string, value: string) {
+      return getClient(this.vm).lpush(key, value)
+    },
+    async lrange (this: Context, key: string, start: number, end: number) {
+      return new Promise((resolve, reject) => {
+        getClient(this.vm).lrange(key, start, end, (err: Error | null, reply: string[]) => {
+          if (err) {
+            reject(err)
+          } else {
+            reply.forEach(x => this.out.write(x))
+            resolve()
+          }
+        })
+      })  
     }
   }
 }
 
 const Y = `
 set: native [key value] mem/set
-get: native-async [key] mem/get
+get: native-async [key] "application/octet-stream" mem/get
+
+lpush: native [key value] mem/lpush
+rpush: native [key value] mem/rpush
+lrange: native-async [key start end] "application/json" mem/lrange
 `
 
 export default function (vm: VM) {

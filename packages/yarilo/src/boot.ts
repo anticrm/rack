@@ -29,11 +29,13 @@ function native(pc: PC): Proc {
 
 function nativeAsync(pc: PC): Proc {
   const params = pc.next() as Code
+  const mimeType = pc.next() as string
   const impl = pc.next() as Function
 
   return (pc: PC): any => {
     const values = params.map(param => pc.next())
-    const out = new PassThrough()
+    const objectMode = mimeType === 'application/json'
+    const out = new PassThrough({ objectMode })
     return { 
       resume: (input?: Readable): Promise<void> => {
         const ctx = {
@@ -53,7 +55,8 @@ function nativeAsync(pc: PC): Proc {
             })
         })
       },
-      out
+      out,
+      mimeType
     }
   }
 }

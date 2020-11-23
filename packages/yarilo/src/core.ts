@@ -143,8 +143,8 @@ eq: native [x y] core/eq
 proc: native [params code] core/proc
 either: native [cond ifTrue ifFalse] core/either
 
-write: native-async [value] core/write
-passthrough: native-async [] core/passthrough
+write: native-async [value] "application/octet-stream" core/write
+passthrough: native-async [] "inherit" core/passthrough
 pipe: native [left right] core/pipe
 
 |: native-infix [left right] core/pipe
