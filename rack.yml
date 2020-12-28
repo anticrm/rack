@@ -1,0 +1,4 @@
+
+nodes:
+  - name: node-1
+    addr: localhost:63001
