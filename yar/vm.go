@@ -22,12 +22,16 @@ type VM struct {
 	pc     int
 	sp     int
 	result Value
-	stack  []Value
-	heap   []Value
-	words  []_Word
-	blocks []_Block
-	maps   []_Map
-	procs  []ProcFunc
+
+	stack []Value
+	heap  []Value
+
+	words   []_Word
+	blocks  []_Block
+	maps    []_Map
+	natives []_Native
+	procs   []_Proc
+	strings []string
 
 	Dictionary Map
 
@@ -37,8 +41,7 @@ type VM struct {
 	InverseSymbols map[sym]string
 	lastSymbol     sym
 
-	// getBindingVmt [LastBinding]func(vm *VM, b Binding) Value
-	// setBindingVmt [LastBinding]func(vm *VM, b Binding, v Value) Value
+	Library *Library
 }
 
 func (vm *VM) alloc(v Value) int {
@@ -61,10 +64,11 @@ func NewVM(stackSize int) *VM {
 	}
 
 	vm.Dictionary = vm.allocMap()
+	vm.Dictionary.put(vm, vm.GetSymbol("load-native"), vm.allocNative(loadNative, "boot/load-native").Value())
 
 	vm.execVmt = execVmt
-	// vm.getBindingVmt = getBindingVmt
-	// vm.setBindingVmt = setBindingVmt
+
+	vm.Library = &Library{}
 
 	return vm
 }
@@ -87,6 +91,11 @@ func (vm *VM) GetSymbol(s string) sym {
 
 func (vm *VM) Bind(code Block) {
 	code.Bind(vm, &BindableMap{vm: vm, m: vm.Dictionary.Value().Val()})
+}
+
+func (vm *VM) BindAndExec(code Block) Value {
+	vm.Bind(code)
+	return vm.Exec(code)
 }
 
 func (vm *VM) nextNoInfix() Value {

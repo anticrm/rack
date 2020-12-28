@@ -65,16 +65,16 @@ func fn(vm *VM) Value {
 	stackSize := len(stackFrame.symbols)
 	code.Bind(vm, stackFrame)
 
-	f := func(vm *VM) Value {
-		for i := 0; i < stackSize; i++ {
-			vm.push(vm.Next())
-		}
-		result := vm.Exec(code)
-		vm.sp = vm.sp - stackSize
-		return result
-	}
+	// f := func(vm *VM) Value {
+	// 	for i := 0; i < stackSize; i++ {
+	// 		vm.push(vm.Next())
+	// 	}
+	// 	result := vm.Exec(code)
+	// 	vm.sp = vm.sp - stackSize
+	// 	return result
+	// }
 
-	return vm.allocProc(f).Value()
+	return vm.allocProc(stackSize, stackSize, code).Value()
 }
 
 func either(vm *VM) Value {
@@ -89,10 +89,25 @@ func either(vm *VM) Value {
 	return vm.Exec(ifFalse)
 }
 
-func CoreModule(vm *VM) {
-	vm.Dictionary.put(vm, vm.GetSymbol("add"), vm.allocProc(add).Value())
-	vm.Dictionary.put(vm, vm.GetSymbol("sub"), vm.allocProc(sub).Value())
-	vm.Dictionary.put(vm, vm.GetSymbol("gt"), vm.allocProc(gt).Value())
-	vm.Dictionary.put(vm, vm.GetSymbol("either"), vm.allocProc(either).Value())
-	vm.Dictionary.put(vm, vm.GetSymbol("fn"), vm.allocProc(fn).Value())
+func CorePackage() *Pkg {
+	result := NewPackage("core")
+	result.AddFunc("add", add)
+	result.AddFunc("sub", sub)
+	result.AddFunc("gt", gt)
+	result.AddFunc("either", either)
+	result.AddFunc("fn", fn)
+	return result
+}
+
+const coreY = `
+add: load-native "core/add"
+sub: load-native "core/sub"
+gt: load-native "core/gt"
+either: load-native "core/either"
+fn: load-native "core/fn"
+`
+
+func CoreModule(vm *VM) Value {
+	code := vm.Parse(coreY)
+	return vm.BindAndExec(code)
 }

@@ -38,6 +38,7 @@ func NewStateMachine(clusterID uint64, nodeID uint64) sm.IStateMachine {
 		NodeID:    nodeID,
 		VM:        yar.NewVM(100),
 	}
+	sm.VM.Library.Add(yar.CorePackage())
 	yar.CoreModule(sm.VM)
 	sm.VM.Library.Add(clusterPackage())
 	clusterModule(sm.VM)
@@ -59,7 +60,7 @@ func (s *StateMachine) Update(data []byte) (sm.Result, error) {
 	fmt.Printf("> %s\n", string(data))
 	code := s.VM.Parse(string(data))
 	result := s.VM.BindAndExec(code)
-	fmt.Printf("%s\n", s.VM.ToString(result))
+	fmt.Printf("%s\n", result.ToString(s.VM))
 	return sm.Result{Value: uint64(len(data))}, nil
 }
 

@@ -19,6 +19,13 @@ import (
 	"testing"
 )
 
+func createTestVM() *VM {
+	vm := NewVM(100)
+	vm.Library.Add(CorePackage())
+	CoreModule(vm)
+	return vm
+}
+
 func TestBlockToString(t *testing.T) {
 	vm := NewVM(100)
 	block := vm.allocBlock()
@@ -36,27 +43,33 @@ func TestBlockToString(t *testing.T) {
 
 func TestParse2(t *testing.T) {
 	vm := NewVM(100)
-	code := vm.parse("add 1 2 [3 4] 5")
+	code := vm.Parse("add 1 2 [3 4] 5")
 	if code.toString(vm) != "[add 1 2 [3 4] 5]" {
 		t.Error("!= [add 1 2 [3 4] 5]")
 	}
 }
 
-func TestExec(t *testing.T) {
+func TestParse3(t *testing.T) {
 	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("add 1 2")
-	vm.Bind(code)
-	result := vm.Exec(code)
+	vm.Parse("x: \"here\"")
+	// fmt.Println(code.toString(vm))
+	// if code.toString(vm) != "[add 1 2 [3 4] 5]" {
+	// 	t.Error("!= [add 1 2 [3 4] 5]")
+	// }
+}
+
+func TestExec(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("add 1 2")
+	result := vm.BindAndExec(code)
 	if result.Kind() != IntegerType || result.Val() != 3 {
 		t.Error("!= 3")
 	}
 }
 
 func TestAdd(t *testing.T) {
-	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("add add 1 2 3")
+	vm := createTestVM()
+	code := vm.Parse("add add 1 2 3")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	if result.Kind() != IntegerType || result.Val() != 6 {
@@ -65,9 +78,8 @@ func TestAdd(t *testing.T) {
 }
 
 func TestSetWord(t *testing.T) {
-	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("x: 5 add x 1")
+	vm := createTestVM()
+	code := vm.Parse("x: 5 add x 1")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	if result.Kind() != IntegerType || result.Val() != 6 {
@@ -76,9 +88,8 @@ func TestSetWord(t *testing.T) {
 }
 
 func TestFn(t *testing.T) {
-	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("x: fn [n] [add n 10] x 5")
+	vm := createTestVM()
+	code := vm.Parse("x: fn [n] [add n 10] x 5")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -88,9 +99,8 @@ func TestFn(t *testing.T) {
 }
 
 func TestSum(t *testing.T) {
-	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("sum: fn [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
+	vm := createTestVM()
+	code := vm.Parse("sum: fn [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -100,13 +110,8 @@ func TestSum(t *testing.T) {
 }
 
 func BenchmarkFib(t *testing.B) {
-	vm := NewVM(100)
-	CoreModule(vm)
-	code := vm.parse("fib: fn [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
+	vm := createTestVM()
+	code := vm.Parse("fib: fn [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
 	vm.Bind(code)
 	vm.Exec(code)
-	// fmt.Println(result.toString(vm))
-	// if result.Kind() != IntegerType || result.Val() != 5050 {
-	// 	t.Error("!= 5050")
-	// }
 }

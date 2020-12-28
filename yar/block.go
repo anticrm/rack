@@ -62,7 +62,7 @@ func (b *_Block) bind(vm *VM, target Bindable) {
 func (b *_Block) toString(vm *VM) string {
 	var elements []string
 	for _, v := range b.values {
-		elements = append(elements, vm.heap[v].toString(vm))
+		elements = append(elements, vm.heap[v].ToString(vm))
 	}
 	return "[" + strings.Join(elements, " ") + "]"
 }

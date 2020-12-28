@@ -24,7 +24,9 @@ const (
 	WordType    = iota
 	IntegerType = iota
 	BooleanType = iota
+	NativeType  = iota
 	ProcType    = iota
+	StringType  = iota
 	LastType    = iota
 )
 
@@ -52,7 +54,7 @@ func (v Value) exec(vm *VM) Value {
 	return vm.execVmt[v.Kind()](vm, v)
 }
 
-func (v Value) toString(vm *VM) string {
+func (v Value) ToString(vm *VM) string {
 	switch v.Kind() {
 	case IntegerType:
 		return strconv.Itoa(v.Val())
@@ -60,6 +62,8 @@ func (v Value) toString(vm *VM) string {
 		return Block(v).toString(vm)
 	case WordType:
 		return vm.words[v.Val()].toString(vm)
+	case StringType:
+		return vm.strings[v.Val()]
 	}
 	panic("not implemented")
 }
@@ -92,16 +96,19 @@ func (i Boolean) Val() bool    { return i.Value().Val() != 0 }
 
 ///
 
-type Proc Value
+type String Value
 
-func makeProc(v int) Proc { return Proc(makeValue(v, ProcType)) }
+func makeString(v int) String { return String(makeValue(v, StringType)) }
 
-func (i Proc) Value() Value { return Value(i) }
+func (i String) Value() Value  { return Value(i) }
+func (v Value) String() String { return String(v) }
 
-func (vm *VM) allocProc(f ProcFunc) Proc {
-	pos := len(vm.procs)
-	vm.procs = append(vm.procs, f)
-	return makeProc(pos)
+func (s String) Val(vm *VM) string { return vm.strings[s.Value().Val()] }
+
+func (vm *VM) allocString(s string) String {
+	pos := len(vm.strings)
+	vm.strings = append(vm.strings, s)
+	return makeString(pos)
 }
 
 ///
@@ -114,10 +121,6 @@ func wordExec(vm *VM, v Value) Value {
 	return vm.words[v.Val()].exec(vm)
 }
 
-func procExec(vm *VM, v Value) Value {
-	return vm.procs[v.Val()](vm)
-}
-
 var execVmt = [LastType]func(vm *VM, value Value) Value{
-	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, procExec,
+	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf,
 }

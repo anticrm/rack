@@ -49,7 +49,7 @@ func readIdent(reader *strings.Reader) (string, rune) {
 	panic("here")
 }
 
-func (vm *VM) parse(s string) Block {
+func (vm *VM) Parse(s string) Block {
 	var stack codeStack
 	result := vm.allocBlock()
 
@@ -58,13 +58,16 @@ func (vm *VM) parse(s string) Block {
 	for c, _, err := reader.ReadRune(); err == nil; c, _, err = reader.ReadRune() {
 		switch c {
 		case ' ', '\t', '\n', '\r': /*nothing*/
+
 		case ']':
 			code := result
 			result = stack.pop()
 			result.add(vm, code.Value())
+
 		case '[':
 			stack.push(result)
 			result = vm.allocBlock()
+
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			val := int(c - '0')
 			for c, _, err := reader.ReadRune(); err == nil; c, _, err = reader.ReadRune() {
@@ -76,6 +79,18 @@ func (vm *VM) parse(s string) Block {
 				}
 			}
 			result.add(vm, MakeInteger(val).Value())
+
+		case '"':
+			var builder strings.Builder
+			for c, _, err := reader.ReadRune(); err == nil; c, _, err = reader.ReadRune() {
+				if c != '"' {
+					builder.WriteRune(c)
+				} else {
+					break
+				}
+			}
+			result.add(vm, vm.allocString(builder.String()).Value())
+
 		default:
 			kind := WordNorm
 			reader.UnreadRune()
