@@ -60,6 +60,8 @@ func (v Value) ToString(vm *VM) string {
 		return strconv.Itoa(v.Val())
 	case BlockType:
 		return Block(v).toString(vm)
+	case MapType:
+		return Map(v).toString(vm)
 	case WordType:
 		return vm.words[v.Val()].toString(vm)
 	case StringType:

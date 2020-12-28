@@ -67,6 +67,13 @@ func (b *_Block) toString(vm *VM) string {
 	return "[" + strings.Join(elements, " ") + "]"
 }
 
+func (b Block) ForEach(vm *VM, f func(v Value)) {
+	block := b._block(vm)
+	for _, v := range block.values {
+		f(vm.heap[v])
+	}
+}
+
 type Map Value
 
 type _Map struct {
@@ -79,12 +86,25 @@ func (m Map) put(vm *VM, sym sym, v Value) {
 	vm.maps[m.Value().Val()].put(vm, sym, v)
 }
 
+func (m Map) toString(vm *VM) string {
+	return vm.maps[m.Value().Val()].toString(vm)
+}
+
 func (vm *VM) allocMap() Map {
-	pos := len(vm.blocks)
+	pos := len(vm.maps)
 	vm.maps = append(vm.maps, _Map{index: make(map[sym]int)})
 	return Map(makeValue(pos, MapType))
 }
 
 func (m _Map) put(vm *VM, sym sym, v Value) {
 	m.index[sym] = vm.alloc(v)
+}
+
+func (m *_Map) toString(vm *VM) string {
+	var elements []string
+	for k, v := range m.index {
+		key := vm.InverseSymbols[k]
+		elements = append(elements, key+": "+vm.heap[v].ToString(vm))
+	}
+	return "{" + strings.Join(elements, ", ") + "}"
 }

@@ -16,6 +16,7 @@
 package yar
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -107,6 +108,25 @@ func TestSum(t *testing.T) {
 	if result.Kind() != IntegerType || result.Val() != 5050 {
 		t.Error("!= 5050")
 	}
+}
+
+func TestMakeObject(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: 2]")
+	result := vm.BindAndExec(code)
+	fmt.Println(result.ToString(vm))
+	// if result.Kind() != IntegerType || result.Val() != 5050 {
+	// 	t.Error("!= 5050")
+	// }
+}
+
+func TestForeach(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("foreach x [1 2 3 4 5] [print x]")
+	vm.BindAndExec(code)
+	// if result.Kind() != IntegerType || result.Val() != 5050 {
+	// 	t.Error("!= 5050")
+	// }
 }
 
 func BenchmarkFib(t *testing.B) {

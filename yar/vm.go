@@ -21,10 +21,12 @@ type VM struct {
 	code   int
 	pc     int
 	sp     int
+	bp     int
 	result Value
 
-	stack []Value
-	heap  []Value
+	stack       []Value
+	heap        []Value
+	wordBinding *[32]Value
 
 	words   []_Word
 	blocks  []_Block
@@ -52,8 +54,10 @@ func (vm *VM) alloc(v Value) int {
 
 func NewVM(stackSize int) *VM {
 	vm := &VM{
-		stack:  make([]Value, stackSize),
-		heap:   make([]Value, 0),
+		stack:       make([]Value, stackSize),
+		heap:        make([]Value, 0),
+		wordBinding: new([32]Value),
+
 		words:  make([]_Word, 0),
 		blocks: make([]_Block, 0),
 		maps:   make([]_Map, 0),
@@ -90,7 +94,7 @@ func (vm *VM) GetSymbol(s string) sym {
 }
 
 func (vm *VM) Bind(code Block) {
-	code.Bind(vm, &BindableMap{vm: vm, m: vm.Dictionary.Value().Val()})
+	code.Bind(vm, &BindToHeap{vm: vm, m: vm.Dictionary.Value().Val()})
 }
 
 func (vm *VM) BindAndExec(code Block) Value {

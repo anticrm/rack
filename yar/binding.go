@@ -21,6 +21,7 @@ const (
 	NoneBinding  = 0
 	HeapBinding  = iota
 	StackBinding = iota
+	WordBinding  = iota
 	LastBinding  = iota
 )
 
@@ -39,6 +40,8 @@ func (b Binding) Get(vm *VM) Value {
 		return vm.heap[b.Val()]
 	case StackBinding:
 		return vm.stack[vm.sp+b.Val()]
+	case WordBinding:
+		return vm.wordBinding[b.Val()]
 	}
 	panic("should not happen")
 	// return vm.getBindingVmt[b.Kind()](vm, b)
@@ -86,12 +89,12 @@ type Bindable interface {
 	getBinding(sym sym, create bool) Binding
 }
 
-type BindableMap struct {
+type BindToHeap struct {
 	vm *VM
 	m  int
 }
 
-func (bm *BindableMap) getBinding(sym sym, create bool) Binding {
+func (bm *BindToHeap) getBinding(sym sym, create bool) Binding {
 	pos, ok := bm.vm.maps[bm.m].index[sym]
 	if ok {
 		return makeBinding(pos, HeapBinding)
@@ -102,4 +105,16 @@ func (bm *BindableMap) getBinding(sym sym, create bool) Binding {
 		return makeBinding(pos, HeapBinding)
 	}
 	return makeBinding(0, NoneBinding)
+}
+
+type BindToWord struct {
+	sym    sym
+	offset int
+}
+
+func (wb BindToWord) getBinding(sym sym, create bool) Binding {
+	if sym == wb.sym {
+		return makeBinding(wb.offset, WordBinding)
+	}
+	return 0
 }

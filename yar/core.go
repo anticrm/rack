@@ -15,6 +15,10 @@
 
 package yar
 
+import (
+	"fmt"
+)
+
 func add(vm *VM) Value {
 	x := vm.Next().Integer().Value().Val()
 	y := vm.Next().Integer().Value().Val()
@@ -65,15 +69,6 @@ func fn(vm *VM) Value {
 	stackSize := len(stackFrame.symbols)
 	code.Bind(vm, stackFrame)
 
-	// f := func(vm *VM) Value {
-	// 	for i := 0; i < stackSize; i++ {
-	// 		vm.push(vm.Next())
-	// 	}
-	// 	result := vm.Exec(code)
-	// 	vm.sp = vm.sp - stackSize
-	// 	return result
-	// }
-
 	return vm.allocProc(stackSize, stackSize, code).Value()
 }
 
@@ -89,6 +84,39 @@ func either(vm *VM) Value {
 	return vm.Exec(ifFalse)
 }
 
+func print(vm *VM) Value {
+	value := vm.Next()
+	fmt.Println(value.ToString(vm))
+	return value
+}
+
+func makeObject(vm *VM) Value {
+	block := vm.Next().Block()
+	object := vm.allocMap()
+	block.Bind(vm, &BindToHeap{vm: vm, m: object.Value().Val()})
+	vm.Exec(block)
+	return object.Value()
+}
+
+func foreach(vm *VM) Value {
+	w := vm.ReadNext().Word()
+	series := vm.Next().Block()
+	code := vm.Next().Block()
+
+	offset := vm.bp
+	code.Bind(vm, &BindToWord{sym: w.sym(vm), offset: offset})
+
+	var result Value
+	vm.bp++
+	series.ForEach(vm, func(v Value) {
+		vm.wordBinding[offset] = v
+		result = vm.Exec(code)
+	})
+	vm.bp--
+
+	return result
+}
+
 func CorePackage() *Pkg {
 	result := NewPackage("core")
 	result.AddFunc("add", add)
@@ -96,6 +124,9 @@ func CorePackage() *Pkg {
 	result.AddFunc("gt", gt)
 	result.AddFunc("either", either)
 	result.AddFunc("fn", fn)
+	result.AddFunc("print", print)
+	result.AddFunc("make-object", makeObject)
+	result.AddFunc("foreach", foreach)
 	return result
 }
 
@@ -105,6 +136,9 @@ sub: load-native "core/sub"
 gt: load-native "core/gt"
 either: load-native "core/either"
 fn: load-native "core/fn"
+print: load-native "core/print"
+make-object: load-native "core/make-object"
+foreach: load-native "core/foreach"
 `
 
 func CoreModule(vm *VM) Value {
