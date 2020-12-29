@@ -26,27 +26,29 @@ type _Block struct {
 func (vm *VM) allocBlock() Block {
 	pos := len(vm.blocks)
 	vm.blocks = append(vm.blocks, _Block{values: make([]int, 0)})
-	return Block(makeValue(pos, BlockType))
+	return Block(pos<<32 | BlockType)
 }
 
+func (b Block) pos() int { return int(b >> 32) }
+func (b Block) ofs() int { return int(b&0xffffffff) >> 8 }
+
 func (b Block) Value() Value { return Value(b) }
+func (v Value) Block() Block { return Block(v) }
 
 func (b Block) _block(vm *VM) *_Block {
-	return &vm.blocks[Value(b).Val()]
+	return &vm.blocks[b.pos()]
 }
 
 func (b Block) Bind(vm *VM, target Bindable) {
-	vm.blocks[Value(b).Val()].bind(vm, target)
+	b._block(vm).bind(vm, target)
 }
 
-func (v Value) Block() Block { return Block(v) }
-
 func (b Block) add(vm *VM, v Value) {
-	vm.blocks[Value(b).Val()].add(vm, v)
+	b._block(vm).add(vm, v)
 }
 
 func (b Block) toString(vm *VM) string {
-	return vm.blocks[Value(b).Val()].toString(vm)
+	return b._block(vm).toString(vm)
 }
 
 func (b *_Block) add(vm *VM, v Value) {

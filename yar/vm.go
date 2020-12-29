@@ -123,10 +123,11 @@ func (vm *VM) Next() Value {
 }
 
 func (vm *VM) Exec(block Block) Value {
-	b := vm.blocks[Value(block).Val()]
+	pos := block.pos()
+	b := vm.blocks[pos]
 	codeSave := vm.code
 	pcSave := vm.pc
-	vm.code = block.Value().Val()
+	vm.code = pos
 	vm.pc = 0
 	len := len(b.values)
 	var result Value

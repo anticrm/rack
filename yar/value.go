@@ -46,7 +46,7 @@ func (v Value) Val() int  { return int(v >> 8) }
 func (v Value) bind(vm *VM, target Bindable) {
 	switch v.Kind() {
 	case BlockType:
-		vm.blocks[v.Val()].bind(vm, target)
+		vm.blocks[v.Block().pos()].bind(vm, target)
 	case WordType:
 		vm.words[v.Val()].bind(vm, target)
 	case PathType:
