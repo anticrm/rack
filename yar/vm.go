@@ -133,6 +133,9 @@ func (vm *VM) Exec(block Block) Value {
 	var result Value
 	for vm.pc < len {
 		result = vm.Next()
+		// if result.Kind() == BreakType {
+		// 	break
+		// }
 	}
 	vm.pc = pcSave
 	vm.code = codeSave

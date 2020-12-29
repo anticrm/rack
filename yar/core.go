@@ -180,6 +180,9 @@ func forall(vm *VM) Value {
 		s := makeBlock(pos, ofs)
 		word.binding(vm).Set(vm, s.Value())
 		result = vm.Exec(code)
+		if result.Kind() == BreakType {
+			break
+		}
 		ofs++
 	}
 
@@ -199,6 +202,9 @@ func repeat(vm *VM) Value {
 	for i := 1; i <= times; i++ {
 		vm.wordBinding[offset] = MakeInteger(i).Value()
 		result = vm.Exec(code)
+		if result.Kind() == BreakType {
+			break
+		}
 	}
 	vm.bp--
 
@@ -265,6 +271,11 @@ func reduce(vm *VM) Value {
 	return reduced.Value()
 }
 
+func _break(vm *VM) Value {
+	vm.pc = len(vm.blocks[vm.code].values)
+	return MakeBreak().Value()
+}
+
 func CorePackage() *Pkg {
 	result := NewPackage("core")
 	result.AddFunc("add", add)
@@ -286,6 +297,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("set", set)
 	result.AddFunc("first", first)
 	result.AddFunc("reduce", reduce)
+	result.AddFunc("break", _break)
 	return result
 }
 
@@ -309,6 +321,7 @@ get: load-native "core/get"
 set: load-native "core/set"
 first: load-native "core/first"
 reduce: load-native "core/reduce"
+break: load-native "core/break"
 `
 
 func CoreModule(vm *VM) Value {

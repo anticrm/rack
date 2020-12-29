@@ -29,6 +29,7 @@ const (
 	StringType  = iota
 	PathType    = iota
 	UnsetType   = iota
+	BreakType   = iota
 	LastType    = iota
 )
 
@@ -130,6 +131,15 @@ func (i Unset) Value() Value { return Value(i) }
 
 ///
 
+type Break Value
+
+func MakeBreak() Break { return Break(makeValue(0, BreakType)) }
+
+// func (v Value) Unset() Unset { return Unset(v) }
+func (i Break) Value() Value { return Value(i) }
+
+///
+
 func returnSelf(vm *VM, v Value) Value {
 	return v
 }
@@ -143,5 +153,5 @@ func pathExec(vm *VM, v Value) Value {
 }
 
 var execVmt = [LastType]func(vm *VM, value Value) Value{
-	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf, pathExec, returnSelf,
+	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf, pathExec, returnSelf, returnSelf,
 }

@@ -222,10 +222,10 @@ func TestReduce(t *testing.T) {
 
 func TestXXX1(t *testing.T) {
 	vm := createTestVM()
-	code := vm.Parse("series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] forall series [if eq 2 get in first series 'id [print 222]]")
+	code := vm.Parse("series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] forall series [if eq 2 get in first series 'id [break]] get in first series 'id")
 	result := vm.BindAndExec(code)
-	if result.Kind() != UnsetType {
-		t.Error("!= unset!")
+	if result.Kind() != IntegerType && result.Val() != 2 {
+		t.Error("!= 2")
 	}
 }
 
