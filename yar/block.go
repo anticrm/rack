@@ -23,10 +23,12 @@ type _Block struct {
 	values []int
 }
 
+func makeBlock(pos int, ofs int) Block { return Block(pos<<32 | ofs<<8 | BlockType) }
+
 func (vm *VM) allocBlock() Block {
 	pos := len(vm.blocks)
 	vm.blocks = append(vm.blocks, _Block{values: make([]int, 0)})
-	return Block(pos<<32 | BlockType)
+	return makeBlock(pos, 0)
 }
 
 func (b Block) pos() int { return int(b >> 32) }

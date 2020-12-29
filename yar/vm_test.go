@@ -129,6 +129,15 @@ func TestForeach(t *testing.T) {
 	// }
 }
 
+func TestForall(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: [1 2 3 4 5] forall x [print first x]")
+	vm.BindAndExec(code)
+	// if result.Kind() != IntegerType || result.Val() != 5050 {
+	// 	t.Error("!= 5050")
+	// }
+}
+
 func TestRepeat(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("repeat x 5 [print x]")
@@ -195,6 +204,25 @@ func TestPath3(t *testing.T) {
 func TestUnset(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("unknown")
+	result := vm.BindAndExec(code)
+	if result.Kind() != UnsetType {
+		t.Error("!= unset!")
+	}
+}
+
+func TestReduce(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("reduce [add 5 5 add 7 8]")
+	result := vm.BindAndExec(code)
+	println(result.ToString(vm))
+	// if result.Kind() != UnsetType {
+	// 	t.Error("!= unset!")
+	// }
+}
+
+func TestXXX1(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] forall series [if eq 2 get in first series 'id [print 222]]")
 	result := vm.BindAndExec(code)
 	if result.Kind() != UnsetType {
 		t.Error("!= unset!")

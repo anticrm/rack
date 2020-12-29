@@ -37,6 +37,12 @@ func gt(vm *VM) Value {
 	return MakeBoolean(x > y).Value()
 }
 
+func eq(vm *VM) Value {
+	x := vm.Next().Integer().Value().Val()
+	y := vm.Next().Integer().Value().Val()
+	return MakeBoolean(x == y).Value()
+}
+
 type stackFrame struct {
 	symbols []sym
 	params  int
@@ -116,6 +122,17 @@ func either(vm *VM) Value {
 	return vm.Exec(ifFalse)
 }
 
+func _if(vm *VM) Value {
+	cond := vm.Next()
+	ifTrue := vm.Next().Block()
+
+	if cond.Boolean().Val() {
+		return vm.Exec(ifTrue)
+	}
+
+	return cond
+}
+
 func print(vm *VM) Value {
 	value := vm.Next()
 	fmt.Println(value.ToString(vm))
@@ -145,6 +162,26 @@ func foreach(vm *VM) Value {
 		result = vm.Exec(code)
 	})
 	vm.bp--
+
+	return result
+}
+
+func forall(vm *VM) Value {
+	word := vm.ReadNext().Word()
+	code := vm.Next().Block()
+
+	series := word.binding(vm).Get(vm).Block()
+
+	pos := series.pos()
+	ofs := series.ofs()
+
+	var result Value
+	for ofs < len(vm.blocks[pos].values) {
+		s := makeBlock(pos, ofs)
+		word.binding(vm).Set(vm, s.Value())
+		result = vm.Exec(code)
+		ofs++
+	}
 
 	return result
 }
@@ -203,22 +240,52 @@ func set(vm *VM) Value {
 	return w.binding(vm).Set(vm, v)
 }
 
+func first(vm *VM) Value {
+	block := vm.Next().Block()
+	return vm.heap[vm.blocks[block.pos()].values[block.ofs()]]
+}
+
+func reduce(vm *VM) Value {
+	block := vm.Next().Block()
+	reduced := vm.allocBlock()
+
+	pos := block.pos()
+	b := vm.blocks[pos]
+	codeSave := vm.code
+	pcSave := vm.pc
+	vm.code = pos
+	vm.pc = 0
+	len := len(b.values)
+	for vm.pc < len {
+		reduced.add(vm, vm.Next())
+	}
+	vm.pc = pcSave
+	vm.code = codeSave
+
+	return reduced.Value()
+}
+
 func CorePackage() *Pkg {
 	result := NewPackage("core")
 	result.AddFunc("add", add)
 	result.AddFunc("sub", sub)
 	result.AddFunc("gt", gt)
+	result.AddFunc("eq", eq)
 	result.AddFunc("either", either)
+	result.AddFunc("if", _if)
 	result.AddFunc("func", proc)
 	result.AddFunc("funct", funct)
 	result.AddFunc("print", print)
 	result.AddFunc("make-object", makeObject)
 	result.AddFunc("foreach", foreach)
+	result.AddFunc("forall", forall)
 	result.AddFunc("repeat", repeat)
 	result.AddFunc("append", _append)
 	result.AddFunc("in", in)
 	result.AddFunc("get", get)
 	result.AddFunc("set", set)
+	result.AddFunc("first", first)
+	result.AddFunc("reduce", reduce)
 	return result
 }
 
@@ -226,17 +293,22 @@ const coreY = `
 add: load-native "core/add"
 sub: load-native "core/sub"
 gt: load-native "core/gt"
+eq: load-native "core/eq"
 either: load-native "core/either"
+if: load-native "core/if"
 func: load-native "core/func"
 funct: load-native "core/funct"
 print: load-native "core/print"
 make-object: load-native "core/make-object"
 foreach: load-native "core/foreach"
+forall: load-native "core/forall"
 repeat: load-native "core/repeat"
 append: load-native "core/append"
 in: load-native "core/in"
 get: load-native "core/get"
 set: load-native "core/set"
+first: load-native "core/first"
+reduce: load-native "core/reduce"
 `
 
 func CoreModule(vm *VM) Value {
