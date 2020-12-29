@@ -32,7 +32,7 @@ func clusterPackage() *yar.Pkg {
 
 const _clusterY = `
 cluster: make-object [
-	nodes: []
+	nodes: make-object []
 	services: []
 	init: fn [] [
 		append nodes make-object [addr: "localhost:63001" cpus: 2 docker-procs: []]

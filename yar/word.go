@@ -31,6 +31,7 @@ func (v Value) Word() Word  { return Word(v) }
 
 func (w Word) _word(vm *VM) *_Word          { return &vm.words[w.Value().Val()] }
 func (w Word) sym(vm *VM) sym               { return w._word(vm).sym() }
+func (w Word) kind(vm *VM) int              { return w._word(vm).kind() }
 func (w Word) bind(vm *VM, target Bindable) { w._word(vm).bind(vm, target) }
 func (w Word) binding(vm *VM) Binding       { return w._word(vm).binding }
 

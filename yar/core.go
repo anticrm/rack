@@ -39,16 +39,30 @@ func gt(vm *VM) Value {
 
 type stackFrame struct {
 	symbols []sym
+	params  int
+	locals  int
+}
+
+func (sf *stackFrame) addParam(sym sym) {
+	sf.symbols = append(sf.symbols, sym)
+	sf.params++
+}
+
+func (sf *stackFrame) addLocal(sym sym) {
+	sf.symbols = append(sf.symbols, sym)
+	sf.locals++
+}
+
+func (sf *stackFrame) stackSize() int {
+	return sf.params + sf.locals
 }
 
 func makeStackFrame(vm *VM, params Block) *stackFrame {
-	var result []sym
-
+	result := &stackFrame{}
 	for _, v := range params._block(vm).values {
-		result = append(result, vm.heap[v].Word().sym(vm))
+		result.addParam(vm.heap[v].Word().sym(vm))
 	}
-
-	return &stackFrame{symbols: result}
+	return result
 }
 
 func (sf *stackFrame) getBinding(sym sym, create bool) Binding {
@@ -66,10 +80,28 @@ func proc(vm *VM) Value {
 	code := vm.Next().Block()
 
 	stackFrame := makeStackFrame(vm, params)
-	stackSize := len(stackFrame.symbols)
 	code.Bind(vm, stackFrame)
 
-	return vm.allocProc(stackSize, stackSize, code).Value()
+	return vm.allocProc(stackFrame.stackSize(), stackFrame.params, code).Value()
+}
+
+func funct(vm *VM) Value {
+	params := vm.Next().Block()
+	code := vm.Next().Block()
+
+	stackFrame := makeStackFrame(vm, params)
+	code.ForEach(vm, func(v Value) {
+		if v.Kind() == WordType {
+			w := v.Word()
+			if w.kind(vm) == SetWord {
+				stackFrame.addLocal(w.sym(vm))
+			}
+		}
+	})
+
+	code.Bind(vm, stackFrame)
+
+	return vm.allocProc(stackFrame.stackSize(), stackFrame.params, code).Value()
 }
 
 func either(vm *VM) Value {
@@ -167,6 +199,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("gt", gt)
 	result.AddFunc("either", either)
 	result.AddFunc("func", proc)
+	result.AddFunc("funct", funct)
 	result.AddFunc("print", print)
 	result.AddFunc("make-object", makeObject)
 	result.AddFunc("foreach", foreach)
@@ -183,6 +216,7 @@ sub: load-native "core/sub"
 gt: load-native "core/gt"
 either: load-native "core/either"
 func: load-native "core/func"
+funct: load-native "core/funct"
 print: load-native "core/print"
 make-object: load-native "core/make-object"
 foreach: load-native "core/foreach"
