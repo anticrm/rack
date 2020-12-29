@@ -64,9 +64,23 @@ func (sf *stackFrame) stackSize() int {
 }
 
 func makeStackFrame(vm *VM, params Block) *stackFrame {
+	localSym := vm.GetSymbol("local")
 	result := &stackFrame{}
+	local := false
 	for _, v := range params._block(vm).values {
-		result.addParam(vm.heap[v].Word().sym(vm))
+		value := vm.heap[v]
+		if value.Kind() == RefinementType {
+			if value.Refinement().sym() != localSym {
+				panic("invalid refinement")
+			}
+			local = true
+		} else {
+			if local {
+				result.addLocal(value.Word().sym(vm))
+			} else {
+				result.addParam(value.Word().sym(vm))
+			}
+		}
 	}
 	return result
 }

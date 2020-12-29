@@ -59,14 +59,17 @@ const clusterY = `
 cluster: make-object [
   nodes: []
 	services: []
-	update-node-info: funct [nodeID nodeName cores cpuModelName] [
+	update-node-info: func [nodeID nodeName cores cpuModelName /local node] [
     forall nodes [if eq get in first nodes 'nodeID nodeID [break]]
-
-
-		node: select nodes nodeID
-		if unset? node [node: set in nodes nodeName make-object []]
-		node/cores: cores
-		node/cpuModelName: cpuModelName
+		either tail? nodes [
+			append nodes make-object [
+				nodeID: nodeID nodeName: nodeName cores: cores cpuModelName: cpuModelName
+			]
+		] [
+			node: first nodes
+			node/cores: cores
+			node/cpuModelName: cpuModelName
+		]
 	]
 ]
 `

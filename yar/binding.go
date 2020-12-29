@@ -54,7 +54,7 @@ func (b Binding) Set(vm *VM, value Value) Value {
 		vm.heap[b.Val()] = value
 		return value
 	case StackBinding:
-		vm.stack[b.Val()] = value
+		vm.stack[vm.sp+b.Val()] = value
 		return value
 	default:
 		panic("should not happen")

@@ -59,6 +59,14 @@ func TestParse3(t *testing.T) {
 	// }
 }
 
+func TestParse4(t *testing.T) {
+	vm := NewVM(100)
+	code := vm.Parse("/aa /bb")
+	if code.toString(vm) != "[/aa /bb]" {
+		t.Error("!= [/aa /bb]")
+	}
+}
+
 func TestExec(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("add 1 2")
@@ -223,6 +231,15 @@ func TestReduce(t *testing.T) {
 func TestXXX1(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] forall series [if eq 2 get in first series 'id [break]] get in first series 'id")
+	result := vm.BindAndExec(code)
+	if result.Kind() != IntegerType && result.Val() != 2 {
+		t.Error("!= 2")
+	}
+}
+
+func TestFnLocal(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: func [a /local loc] [loc: add a 1 loc] x 1")
 	result := vm.BindAndExec(code)
 	if result.Kind() != IntegerType && result.Val() != 2 {
 		t.Error("!= 2")

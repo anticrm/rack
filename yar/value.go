@@ -18,19 +18,20 @@ package yar
 import "strconv"
 
 const (
-	NoneType    = iota
-	BlockType   = iota
-	MapType     = iota
-	WordType    = iota
-	IntegerType = iota
-	BooleanType = iota
-	NativeType  = iota
-	ProcType    = iota
-	StringType  = iota
-	PathType    = iota
-	UnsetType   = iota
-	BreakType   = iota
-	LastType    = iota
+	NoneType       = iota
+	BlockType      = iota
+	MapType        = iota
+	WordType       = iota
+	IntegerType    = iota
+	BooleanType    = iota
+	NativeType     = iota
+	ProcType       = iota
+	StringType     = iota
+	PathType       = iota
+	UnsetType      = iota
+	BreakType      = iota
+	RefinementType = iota
+	LastType       = iota
 )
 
 const None = Value(0)
@@ -73,6 +74,8 @@ func (v Value) ToString(vm *VM) string {
 		return vm.strings[v.Val()]
 	case UnsetType:
 		return "unset!"
+	case RefinementType:
+		return "/" + vm.InverseSymbols[v.Refinement().sym()]
 	}
 	println(v.Kind())
 	panic("not implemented")
@@ -137,6 +140,16 @@ func MakeBreak() Break { return Break(makeValue(0, BreakType)) }
 
 // func (v Value) Unset() Unset { return Unset(v) }
 func (i Break) Value() Value { return Value(i) }
+
+///
+
+type Refinement Value
+
+func MakeRefinement(sym sym) Refinement { return Refinement(makeValue(int(sym), RefinementType)) }
+
+func (v Value) Refinement() Refinement { return Refinement(v) }
+func (i Refinement) Value() Value      { return Value(i) }
+func (i Refinement) sym() sym          { return sym(i.Value().Val()) }
 
 ///
 

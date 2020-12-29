@@ -98,6 +98,11 @@ func (vm *VM) Parse(s string) Block {
 				kind = GetWord
 			case '\'':
 				kind = Quote
+			case '/':
+				ident, _ := readIdent(reader)
+				result.add(vm, MakeRefinement(vm.GetSymbol(ident)).Value())
+				reader.UnreadRune()
+				continue
 			default:
 				reader.UnreadRune()
 			}
