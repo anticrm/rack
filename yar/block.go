@@ -87,6 +87,10 @@ func (m Map) put(vm *VM, sym sym, v Value) {
 	vm.maps[m.Value().Val()].put(vm, sym, v)
 }
 
+func (m Map) get(vm *VM, sym sym) Value {
+	return vm.maps[m.Value().Val()].get(vm, sym)
+}
+
 func (m Map) find(vm *VM, sym sym) int {
 	return vm.maps[m.Value().Val()].find(vm, sym)
 }
@@ -103,6 +107,10 @@ func (vm *VM) allocMap() Map {
 
 func (m _Map) put(vm *VM, sym sym, v Value) {
 	m.index[sym] = vm.alloc(v)
+}
+
+func (m _Map) get(vm *VM, sym sym) Value {
+	return vm.heap[m.index[sym]]
 }
 
 func (m _Map) find(vm *VM, sym sym) int {

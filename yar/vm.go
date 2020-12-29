@@ -34,6 +34,7 @@ type VM struct {
 	natives []_Native
 	procs   []_Proc
 	strings []string
+	paths   []_Path
 
 	Dictionary Map
 

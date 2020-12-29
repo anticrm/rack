@@ -102,9 +102,27 @@ func (vm *VM) Parse(s string) Block {
 				reader.UnreadRune()
 			}
 			ident, next := readIdent(reader)
-			if next == ':' {
+			switch next {
+			case ':':
 				kind = SetWord
-			} else {
+			case '/':
+				var path []sym
+				var i string
+				for true {
+					i, next = readIdent(reader)
+					path = append(path, vm.GetSymbol(i))
+					if next != '/' {
+						break
+					}
+				}
+				if next == ':' {
+					kind = SetWord
+				} else {
+					reader.UnreadRune()
+				}
+				result.add(vm, vm.allocPath(kind, ident, path).Value())
+				continue
+			default:
 				reader.UnreadRune()
 			}
 			result.add(vm, vm.allocWord(kind, ident).Value())

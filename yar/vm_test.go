@@ -90,7 +90,7 @@ func TestSetWord(t *testing.T) {
 
 func TestFn(t *testing.T) {
 	vm := createTestVM()
-	code := vm.Parse("x: fn [n] [add n 10] x 5")
+	code := vm.Parse("x: proc [n] [add n 10] x 5")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -101,7 +101,7 @@ func TestFn(t *testing.T) {
 
 func TestSum(t *testing.T) {
 	vm := createTestVM()
-	code := vm.Parse("sum: fn [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
+	code := vm.Parse("sum: proc [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -147,9 +147,36 @@ func TestGetIn(t *testing.T) {
 	}
 }
 
+func TestPath(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: 2] x/a")
+	result := vm.BindAndExec(code)
+	if result.Kind() != IntegerType || result.Val() != 1 {
+		t.Error("!= 1")
+	}
+}
+
+func TestPath2(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: make-object [c: 2]] x/b/c")
+	result := vm.BindAndExec(code)
+	if result.Kind() != IntegerType || result.Val() != 2 {
+		t.Error("!= 2")
+	}
+}
+
+func TestPath3(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: make-object [c: 2]] x/a: 2 x/a")
+	result := vm.BindAndExec(code)
+	if result.Kind() != IntegerType || result.Val() != 2 {
+		t.Error("!= 2")
+	}
+}
+
 func BenchmarkFib(t *testing.B) {
 	vm := createTestVM()
-	code := vm.Parse("fib: fn [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
+	code := vm.Parse("fib: proc [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
 	vm.Bind(code)
 	vm.Exec(code)
 }

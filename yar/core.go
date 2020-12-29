@@ -61,7 +61,7 @@ func (sf *stackFrame) getBinding(sym sym, create bool) Binding {
 	return 0
 }
 
-func fn(vm *VM) Value {
+func proc(vm *VM) Value {
 	params := vm.Next().Block()
 	code := vm.Next().Block()
 
@@ -166,7 +166,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("sub", sub)
 	result.AddFunc("gt", gt)
 	result.AddFunc("either", either)
-	result.AddFunc("fn", fn)
+	result.AddFunc("proc", proc)
 	result.AddFunc("print", print)
 	result.AddFunc("make-object", makeObject)
 	result.AddFunc("foreach", foreach)
@@ -182,7 +182,7 @@ add: load-native "core/add"
 sub: load-native "core/sub"
 gt: load-native "core/gt"
 either: load-native "core/either"
-fn: load-native "core/fn"
+proc: load-native "core/proc"
 print: load-native "core/print"
 make-object: load-native "core/make-object"
 foreach: load-native "core/foreach"

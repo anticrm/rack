@@ -27,6 +27,7 @@ const (
 	NativeType  = iota
 	ProcType    = iota
 	StringType  = iota
+	PathType    = iota
 	LastType    = iota
 )
 
@@ -47,6 +48,8 @@ func (v Value) bind(vm *VM, target Bindable) {
 		vm.blocks[v.Val()].bind(vm, target)
 	case WordType:
 		vm.words[v.Val()].bind(vm, target)
+	case PathType:
+		vm.paths[v.Val()].bind(vm, target)
 	}
 }
 
@@ -123,6 +126,10 @@ func wordExec(vm *VM, v Value) Value {
 	return vm.words[v.Val()].exec(vm, v)
 }
 
+func pathExec(vm *VM, v Value) Value {
+	return vm.paths[v.Val()].exec(vm, v)
+}
+
 var execVmt = [LastType]func(vm *VM, value Value) Value{
-	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf,
+	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf, pathExec,
 }

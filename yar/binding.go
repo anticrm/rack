@@ -44,7 +44,6 @@ func (b Binding) Get(vm *VM) Value {
 		return vm.wordBinding[b.Val()]
 	}
 	panic("should not happen")
-	// return vm.getBindingVmt[b.Kind()](vm, b)
 }
 
 func (b Binding) Set(vm *VM, value Value) Value {
@@ -60,30 +59,29 @@ func (b Binding) Set(vm *VM, value Value) Value {
 	default:
 		panic("should not happen")
 	}
-	// return vm.setBindingVmt[b.Kind()](vm, b, value)
 }
 
-func getNoneBinding(vm *VM, binding Binding) Value  { panic("not bound") }
-func getHeapBinding(vm *VM, binding Binding) Value  { return vm.heap[binding.Val()] }
-func getStackBinding(vm *VM, binding Binding) Value { return vm.stack[vm.sp+binding.Val()] }
+// func getNoneBinding(vm *VM, binding Binding) Value  { panic("not bound") }
+// func getHeapBinding(vm *VM, binding Binding) Value  { return vm.heap[binding.Val()] }
+// func getStackBinding(vm *VM, binding Binding) Value { return vm.stack[vm.sp+binding.Val()] }
 
-var getBindingVmt = [LastBinding]func(vm *VM, b Binding) Value{
-	getNoneBinding, getHeapBinding, getStackBinding,
-}
+// var getBindingVmt = [LastBinding]func(vm *VM, b Binding) Value{
+// 	getNoneBinding, getHeapBinding, getStackBinding,
+// }
 
-func setNoneBinding(vm *VM, binding Binding, value Value) Value { panic("not bound") }
-func setHeapBinding(vm *VM, binding Binding, value Value) Value {
-	vm.heap[binding.Val()] = value
-	return value
-}
-func setStackBinding(vm *VM, binding Binding, value Value) Value {
-	vm.stack[vm.sp+binding.Val()] = value
-	return value
-}
+// func setNoneBinding(vm *VM, binding Binding, value Value) Value { panic("not bound") }
+// func setHeapBinding(vm *VM, binding Binding, value Value) Value {
+// 	vm.heap[binding.Val()] = value
+// 	return value
+// }
+// func setStackBinding(vm *VM, binding Binding, value Value) Value {
+// 	vm.stack[vm.sp+binding.Val()] = value
+// 	return value
+// }
 
-var setBindingVmt = [LastBinding]func(vm *VM, b Binding, v Value) Value{
-	setNoneBinding, setHeapBinding, setStackBinding,
-}
+// var setBindingVmt = [LastBinding]func(vm *VM, b Binding, v Value) Value{
+// 	setNoneBinding, setHeapBinding, setStackBinding,
+// }
 
 type Bindable interface {
 	getBinding(sym sym, create bool) Binding
