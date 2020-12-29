@@ -147,6 +147,15 @@ func TestGetIn(t *testing.T) {
 	}
 }
 
+func TestGetIn2(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: 2] get in x 'c")
+	result := vm.BindAndExec(code)
+	if result.Kind() != UnsetType {
+		t.Error("!= unset!")
+	}
+}
+
 func TestPath(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("x: make-object [a: 1 b: 2] x/a")
@@ -171,6 +180,24 @@ func TestPath3(t *testing.T) {
 	result := vm.BindAndExec(code)
 	if result.Kind() != IntegerType || result.Val() != 2 {
 		t.Error("!= 2")
+	}
+}
+
+// func TestPath4(t *testing.T) {
+// 	vm := createTestVM()
+// 	code := vm.Parse("x: make-object [a: 1 b: 2] x/c")
+// 	result := vm.BindAndExec(code)
+// 	if result.Kind() != UnsetType {
+// 		t.Error("!= unset!")
+// 	}
+// }
+
+func TestUnset(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("unknown")
+	result := vm.BindAndExec(code)
+	if result.Kind() != UnsetType {
+		t.Error("!= unset!")
 	}
 }
 

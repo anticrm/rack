@@ -184,12 +184,23 @@ func in(vm *VM) Value {
 
 	symkind := makeSymKind(sym, Quote)
 	pos := m.find(vm, sym)
-	binding := makeBinding(pos, HeapBinding)
+	var binding Binding
+	if pos == -1 {
+		binding = makeBinding(0, NoneBinding)
+	} else {
+		binding = makeBinding(pos, HeapBinding)
+	}
 	return vm._allocWord(_Word{symKind: symkind, binding: binding}).Value()
 }
 
 func get(vm *VM) Value {
 	return vm.Next().Word().binding(vm).Get(vm)
+}
+
+func set(vm *VM) Value {
+	w := vm.Next().Word()
+	v := vm.Next()
+	return w.binding(vm).Set(vm, v)
 }
 
 func CorePackage() *Pkg {
@@ -207,6 +218,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("append", _append)
 	result.AddFunc("in", in)
 	result.AddFunc("get", get)
+	result.AddFunc("set", set)
 	return result
 }
 
@@ -224,6 +236,7 @@ repeat: load-native "core/repeat"
 append: load-native "core/append"
 in: load-native "core/in"
 get: load-native "core/get"
+set: load-native "core/set"
 `
 
 func CoreModule(vm *VM) Value {

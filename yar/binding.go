@@ -35,7 +35,7 @@ func makeBinding(val int, kind int) Binding {
 func (b Binding) Get(vm *VM) Value {
 	switch b.Kind() {
 	case NoneBinding:
-		panic("not bound")
+		return MakeUnset().Value()
 	case HeapBinding:
 		return vm.heap[b.Val()]
 	case StackBinding:

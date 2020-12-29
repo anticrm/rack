@@ -32,13 +32,13 @@ func clusterPackage() *yar.Pkg {
 
 const _clusterY = `
 cluster: make-object [
-	nodes: make-object []
+	nodes: []
 	services: []
-	init: fn [] [
+	init: func [] [
 		append nodes make-object [addr: "localhost:63001" cpus: 2 docker-procs: []]
 		append nodes make-object [addr: "localhost:63002" cpus: 2 docker-procs: []]
 	]
-	docker-service: fn [_image _port] [
+	docker-service: func [_image _port] [
 		print image
 		foreach node nodes [
 			repeat cpu node/cpus [
@@ -46,7 +46,7 @@ cluster: make-object [
 			]
 		]
 	]
-	node-info: fn [nodeID nodeName cores cpuModelName /local node] [
+	node-info: func [nodeID nodeName cores cpuModelName /local node] [
 		node: get in nodes nodeName
 		if unset? node [node: set in nodes nodeName make-object []]
 		node/cores: cores
@@ -56,6 +56,20 @@ cluster: make-object [
 `
 
 const clusterY = `
+cluster: make-object [
+  nodes: []
+	services: []
+	update-node-info: func [nodeID nodeName cores cpuModelName /local node] [
+
+    
+
+
+		node: select nodes nodeID
+		if unset? node [node: set in nodes nodeName make-object []]
+		node/cores: cores
+		node/cpuModelName: cpuModelName
+	]
+]
 `
 
 func clusterModule(vm *yar.VM) yar.Value {

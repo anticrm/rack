@@ -28,6 +28,7 @@ const (
 	ProcType    = iota
 	StringType  = iota
 	PathType    = iota
+	UnsetType   = iota
 	LastType    = iota
 )
 
@@ -69,7 +70,10 @@ func (v Value) ToString(vm *VM) string {
 		return vm.words[v.Val()].toString(vm)
 	case StringType:
 		return vm.strings[v.Val()]
+	case UnsetType:
+		return "unset!"
 	}
+	println(v.Kind())
 	panic("not implemented")
 }
 
@@ -118,6 +122,14 @@ func (vm *VM) allocString(s string) String {
 
 ///
 
+type Unset Value
+
+func MakeUnset() Unset       { return Unset(makeValue(0, UnsetType)) }
+func (v Value) Unset() Unset { return Unset(v) }
+func (i Unset) Value() Value { return Value(i) }
+
+///
+
 func returnSelf(vm *VM, v Value) Value {
 	return v
 }
@@ -131,5 +143,5 @@ func pathExec(vm *VM, v Value) Value {
 }
 
 var execVmt = [LastType]func(vm *VM, value Value) Value{
-	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf, pathExec,
+	returnSelf, returnSelf, returnSelf, wordExec, returnSelf, returnSelf, nativeExec, procExec, returnSelf, pathExec, returnSelf,
 }

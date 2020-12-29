@@ -114,7 +114,11 @@ func (m _Map) get(vm *VM, sym sym) Value {
 }
 
 func (m _Map) find(vm *VM, sym sym) int {
-	return m.index[sym]
+	idx, ok := m.index[sym]
+	if ok {
+		return idx
+	}
+	return -1
 }
 
 func (m *_Map) toString(vm *VM) string {
