@@ -117,6 +117,49 @@ func foreach(vm *VM) Value {
 	return result
 }
 
+func repeat(vm *VM) Value {
+	w := vm.ReadNext().Word()
+	times := vm.Next().Integer().Value().Val()
+	code := vm.Next().Block()
+
+	offset := vm.bp
+	code.Bind(vm, &BindToWord{sym: w.sym(vm), offset: offset})
+
+	var result Value
+	vm.bp++
+	for i := 1; i <= times; i++ {
+		vm.wordBinding[offset] = MakeInteger(i).Value()
+		result = vm.Exec(code)
+	}
+	vm.bp--
+
+	return result
+}
+
+func _append(vm *VM) Value {
+	series := vm.Next().Block()
+	value := vm.Next()
+
+	series.add(vm, value)
+
+	return series.Value()
+}
+
+func in(vm *VM) Value {
+	m := vm.Next().Map()
+	w := vm.Next().Word()
+	sym := w.sym(vm)
+
+	symkind := makeSymKind(sym, Quote)
+	pos := m.find(vm, sym)
+	binding := makeBinding(pos, HeapBinding)
+	return vm._allocWord(_Word{symKind: symkind, binding: binding}).Value()
+}
+
+func get(vm *VM) Value {
+	return vm.Next().Word().binding(vm).Get(vm)
+}
+
 func CorePackage() *Pkg {
 	result := NewPackage("core")
 	result.AddFunc("add", add)
@@ -127,6 +170,10 @@ func CorePackage() *Pkg {
 	result.AddFunc("print", print)
 	result.AddFunc("make-object", makeObject)
 	result.AddFunc("foreach", foreach)
+	result.AddFunc("repeat", repeat)
+	result.AddFunc("append", _append)
+	result.AddFunc("in", in)
+	result.AddFunc("get", get)
 	return result
 }
 
@@ -139,6 +186,10 @@ fn: load-native "core/fn"
 print: load-native "core/print"
 make-object: load-native "core/make-object"
 foreach: load-native "core/foreach"
+repeat: load-native "core/repeat"
+append: load-native "core/append"
+in: load-native "core/in"
+get: load-native "core/get"
 `
 
 func CoreModule(vm *VM) Value {

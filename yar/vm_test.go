@@ -129,6 +129,24 @@ func TestForeach(t *testing.T) {
 	// }
 }
 
+func TestRepeat(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("repeat x 5 [print x]")
+	vm.BindAndExec(code)
+	// if result.Kind() != IntegerType || result.Val() != 5050 {
+	// 	t.Error("!= 5050")
+	// }
+}
+
+func TestGetIn(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse("x: make-object [a: 1 b: 2] get in x 'b")
+	result := vm.BindAndExec(code)
+	if result.Kind() != IntegerType || result.Val() != 2 {
+		t.Error("!= 2")
+	}
+}
+
 func BenchmarkFib(t *testing.B) {
 	vm := createTestVM()
 	code := vm.Parse("fib: fn [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")

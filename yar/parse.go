@@ -46,7 +46,7 @@ func readIdent(reader *strings.Reader) (string, rune) {
 			return builder.String(), c
 		}
 	}
-	panic("here")
+	return builder.String(), 0
 }
 
 func (vm *VM) Parse(s string) Block {
@@ -93,7 +93,14 @@ func (vm *VM) Parse(s string) Block {
 
 		default:
 			kind := WordNorm
-			reader.UnreadRune()
+			switch c {
+			case ':':
+				kind = GetWord
+			case '\'':
+				kind = Quote
+			default:
+				reader.UnreadRune()
+			}
 			ident, next := readIdent(reader)
 			if next == ':' {
 				kind = SetWord

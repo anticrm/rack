@@ -21,6 +21,7 @@ const (
 	WordNorm = iota
 	GetWord  = iota
 	SetWord  = iota
+	Quote    = iota
 )
 
 type Word Value
@@ -28,19 +29,25 @@ type Word Value
 func (w Word) Value() Value { return Value(w) }
 func (v Value) Word() Word  { return Word(v) }
 
-func (w Word) _word(vm *VM) *_Word { return &vm.words[w.Value().Val()] }
-func (w Word) sym(vm *VM) sym      { return w._word(vm).sym() }
+func (w Word) _word(vm *VM) *_Word          { return &vm.words[w.Value().Val()] }
+func (w Word) sym(vm *VM) sym               { return w._word(vm).sym() }
+func (w Word) bind(vm *VM, target Bindable) { w._word(vm).bind(vm, target) }
+func (w Word) binding(vm *VM) Binding       { return w._word(vm).binding }
 
 type _Word struct {
 	symKind int64
 	binding Binding
 }
 
+func (vm *VM) _allocWord(_word _Word) Word {
+	pos := len(vm.words)
+	vm.words = append(vm.words, _word)
+	return Word(makeValue(pos, WordType))
+}
+
 func (vm *VM) allocWord(kind int, ident string) Word {
 	symKind := makeSymKind(vm.GetSymbol(ident), kind)
-	pos := len(vm.words)
-	vm.words = append(vm.words, _Word{symKind: symKind, binding: 0})
-	return Word(makeValue(pos, WordType))
+	return vm._allocWord(_Word{symKind: symKind, binding: 0})
 }
 
 func (w *_Word) sym() sym                 { return sym(w.symKind >> 8) }
@@ -54,15 +61,18 @@ func (w *_Word) bind(vm *VM, target Bindable) {
 	}
 }
 
-func (w *_Word) exec(vm *VM) Value {
+func (w *_Word) exec(vm *VM, v Value) Value {
 	switch w.kind() {
 	case WordNorm:
 		return w.binding.Get(vm).exec(vm)
+	case GetWord:
+		return w.binding.Get(vm)
 	case SetWord:
 		return w.binding.Set(vm, vm.Next())
-	default:
-		panic("not implemented")
+	case Quote:
+		return v
 	}
+	panic("unreachable")
 }
 
 func (w *_Word) toString(vm *VM) string {

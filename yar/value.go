@@ -120,7 +120,7 @@ func returnSelf(vm *VM, v Value) Value {
 }
 
 func wordExec(vm *VM, v Value) Value {
-	return vm.words[v.Val()].exec(vm)
+	return vm.words[v.Val()].exec(vm, v)
 }
 
 var execVmt = [LastType]func(vm *VM, value Value) Value{

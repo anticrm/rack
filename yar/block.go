@@ -81,9 +81,14 @@ type _Map struct {
 }
 
 func (m Map) Value() Value { return Value(m) }
+func (v Value) Map() Map   { return Map(v) }
 
 func (m Map) put(vm *VM, sym sym, v Value) {
 	vm.maps[m.Value().Val()].put(vm, sym, v)
+}
+
+func (m Map) find(vm *VM, sym sym) int {
+	return vm.maps[m.Value().Val()].find(vm, sym)
 }
 
 func (m Map) toString(vm *VM) string {
@@ -98,6 +103,10 @@ func (vm *VM) allocMap() Map {
 
 func (m _Map) put(vm *VM, sym sym, v Value) {
 	m.index[sym] = vm.alloc(v)
+}
+
+func (m _Map) find(vm *VM, sym sym) int {
+	return m.index[sym]
 }
 
 func (m *_Map) toString(vm *VM) string {
