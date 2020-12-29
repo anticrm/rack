@@ -90,7 +90,7 @@ func TestSetWord(t *testing.T) {
 
 func TestFn(t *testing.T) {
 	vm := createTestVM()
-	code := vm.Parse("x: proc [n] [add n 10] x 5")
+	code := vm.Parse("x: func [n] [add n 10] x 5")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -101,7 +101,7 @@ func TestFn(t *testing.T) {
 
 func TestSum(t *testing.T) {
 	vm := createTestVM()
-	code := vm.Parse("sum: proc [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
+	code := vm.Parse("sum: func [n] [either gt n 1 [add n sum sub n 1] [n]] sum 100")
 	vm.Bind(code)
 	result := vm.Exec(code)
 	// fmt.Println(result.toString(vm))
@@ -176,7 +176,7 @@ func TestPath3(t *testing.T) {
 
 func BenchmarkFib(t *testing.B) {
 	vm := createTestVM()
-	code := vm.Parse("fib: proc [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
+	code := vm.Parse("fib: func [n] [either gt n 1 [add fib sub n 2 fib sub n 1] [n]] fib 40")
 	vm.Bind(code)
 	vm.Exec(code)
 }

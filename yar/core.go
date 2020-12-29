@@ -166,7 +166,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("sub", sub)
 	result.AddFunc("gt", gt)
 	result.AddFunc("either", either)
-	result.AddFunc("proc", proc)
+	result.AddFunc("func", proc)
 	result.AddFunc("print", print)
 	result.AddFunc("make-object", makeObject)
 	result.AddFunc("foreach", foreach)
@@ -182,7 +182,7 @@ add: load-native "core/add"
 sub: load-native "core/sub"
 gt: load-native "core/gt"
 either: load-native "core/either"
-proc: load-native "core/proc"
+func: load-native "core/func"
 print: load-native "core/print"
 make-object: load-native "core/make-object"
 foreach: load-native "core/foreach"
