@@ -190,13 +190,19 @@ func forall(vm *VM) Value {
 	ofs := series.ofs()
 
 	var result Value
-	for ofs < len(vm.blocks[pos].values) {
+	for true {
 		s := makeBlock(pos, ofs)
 		word.binding(vm).Set(vm, s.Value())
+
+		if ofs >= len(vm.blocks[pos].values) {
+			break
+		}
+
 		result = vm.Exec(code)
 		if result.Kind() == BreakType {
 			break
 		}
+
 		ofs++
 	}
 
@@ -265,6 +271,11 @@ func first(vm *VM) Value {
 	return vm.heap[vm.blocks[block.pos()].values[block.ofs()]]
 }
 
+func isTail(vm *VM) Value {
+	block := vm.Next().Block()
+	return MakeBoolean(len(vm.blocks[block.pos()].values) <= block.ofs()).Value()
+}
+
 func reduce(vm *VM) Value {
 	block := vm.Next().Block()
 	reduced := vm.allocBlock()
@@ -312,6 +323,7 @@ func CorePackage() *Pkg {
 	result.AddFunc("first", first)
 	result.AddFunc("reduce", reduce)
 	result.AddFunc("break", _break)
+	result.AddFunc("tail?", isTail)
 	return result
 }
 
@@ -336,6 +348,7 @@ set: load-native "core/set"
 first: load-native "core/first"
 reduce: load-native "core/reduce"
 break: load-native "core/break"
+tail?: load-native "core/tail?"
 `
 
 func CoreModule(vm *VM) Value {

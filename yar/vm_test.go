@@ -232,8 +232,31 @@ func TestXXX1(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] forall series [if eq 2 get in first series 'id [break]] get in first series 'id")
 	result := vm.BindAndExec(code)
-	if result.Kind() != IntegerType && result.Val() != 2 {
+	if result.Kind() != IntegerType || result.Val() != 2 {
 		t.Error("!= 2")
+	}
+}
+
+func TestXXX2(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse(`
+series: [1 2 3] forall series [] tail? series
+`)
+	result := vm.BindAndExec(code)
+	if result.Kind() != BooleanType || result.Boolean().Val() != true {
+		t.Error("!= true")
+	}
+}
+
+func TestXXX3(t *testing.T) {
+	vm := createTestVM()
+	code := vm.Parse(`
+series: reduce [make-object [id: 1] make-object [id: 2] make-object [id: 3]] 
+tail? series
+`)
+	result := vm.BindAndExec(code)
+	if result.Kind() != BooleanType || result.Boolean().Val() != false {
+		t.Error("!= false")
 	}
 }
 
@@ -241,7 +264,7 @@ func TestFnLocal(t *testing.T) {
 	vm := createTestVM()
 	code := vm.Parse("x: func [a /local loc] [loc: add a 1 loc] x 1")
 	result := vm.BindAndExec(code)
-	if result.Kind() != IntegerType && result.Val() != 2 {
+	if result.Kind() != IntegerType || result.Val() != 2 {
 		t.Error("!= 2")
 	}
 }

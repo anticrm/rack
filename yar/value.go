@@ -64,6 +64,11 @@ func (v Value) ToString(vm *VM) string {
 	switch v.Kind() {
 	case IntegerType:
 		return strconv.Itoa(v.Val())
+	case BooleanType:
+		if v.Boolean().Val() {
+			return "true"
+		}
+		return "false"
 	case BlockType:
 		return Block(v).toString(vm)
 	case MapType:
