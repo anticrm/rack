@@ -15,27 +15,15 @@
 
 package node
 
-import (
-	"testing"
+import "strings"
 
-	"github.com/anticrm/rack/yar"
-)
-
-func createTestVM() *yar.VM {
-	vm := yar.NewVM(100)
-	vm.Library.Add(yar.CorePackage())
-	yar.CoreModule(vm)
-	clusterModule(vm)
-	return vm
+func sendCommand(cmd chan string, args []string) {
+	var builder strings.Builder
+	for _, arg := range args {
+		builder.WriteString(arg)
+		builder.WriteByte(' ')
+	}
+	cmd <- builder.String()
 }
 
-func Test1(t *testing.T) {
-	vm := createTestVM()
-	code := vm.Parse("cluster/update-node-info 1 \"node-1\" 2 \"Intel\" cluster/docker-service \"image\" 3000")
-	vm.Bind(code)
-	result := vm.Exec(code)
-	println(result.ToString(vm))
-	// if result.Kind() != IntegerType || result.Val() != 6 {
-	// 	t.Error("!= 6")
-	// }
-}
+func quote(s string) string { return "\"" + s + "\"" }

@@ -62,6 +62,8 @@ func (v Value) exec(vm *VM) Value {
 
 func (v Value) ToString(vm *VM) string {
 	switch v.Kind() {
+	case NoneType:
+		return "none"
 	case IntegerType:
 		return strconv.Itoa(v.Val())
 	case BooleanType:

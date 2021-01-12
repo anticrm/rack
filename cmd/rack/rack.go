@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	fmt.Println("anticrm rack (c) copyright 2020, 2021 Anticrm Project Contributors. All rights reserved.")
+	fmt.Println("anticrm//rack (c) copyright 2020, 2021 Anticrm Project Contributors. All rights reserved.")
 
 	configFile := flag.String("f", "rack.yml", "Config file")
 	nodeAddr := flag.String("addr", "", "This node address")

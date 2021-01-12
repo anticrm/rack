@@ -30,45 +30,31 @@ func clusterPackage() *yar.Pkg {
 	return result
 }
 
-const _clusterY = `
-cluster: make-object [
-	nodes: []
-	services: []
-	init: func [] [
-		append nodes make-object [addr: "localhost:63001" cpus: 2 docker-procs: []]
-		append nodes make-object [addr: "localhost:63002" cpus: 2 docker-procs: []]
-	]
-	docker-service: func [_image _port] [
-		print image
-		foreach node nodes [
-			repeat cpu node/cpus [
-				append node/docker-procs make-object [image: _image port: _port]
-			]
-		]
-	]
-	node-info: func [nodeID nodeName cores cpuModelName /local node] [
-		node: get in nodes nodeName
-		if unset? node [node: set in nodes nodeName make-object []]
-		node/cores: cores
-		node/cpuModelName: cpuModelName
-	]
-]
-`
+// repeat cpu node/cpus [
+// 	append node/docker-procs make-object [image: _image port: _port]
+// ]
 
 const clusterY = `
 cluster: make-object [
   nodes: []
 	services: []
-	update-node-info: func [nodeID nodeName cores cpuModelName /local node] [
-    forall nodes [if eq get in first nodes 'nodeID nodeID [break]]
+	docker-service: func [_image _port] [
+		foreach node nodes [
+			repeat core node/cores [
+				append node/docker-procs make-object [image: _image port: _port]
+			]
+		]
+	]
+	update-node-info: func [_nodeID _nodeName _cores _cpuModelName /local node] [
+    forall nodes [if eq get in first nodes 'nodeID _nodeID [break]]
 		either tail? nodes [
 			append nodes make-object [
-				nodeID: nodeID nodeName: nodeName cores: cores cpuModelName: cpuModelName
+				nodeID: _nodeID nodeName: _nodeName cores: _cores cpuModelName: _cpuModelName docker-procs: []
 			]
 		] [
 			node: first nodes
-			node/cores: cores
-			node/cpuModelName: cpuModelName
+			node/cores: _cores
+			node/cpuModelName: _cpuModelName
 		]
 	]
 ]

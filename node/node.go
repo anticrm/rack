@@ -207,7 +207,7 @@ func (c *Cluster) Start(nodeAddr string) {
 		}
 	})
 
-	// startHostMonitor(nodeID, nodeName, cmdChannel)
+	startHostMonitor(nodeID, nodeName, cmdChannel)
 	// startCtl(cmdChannel)
 
 	raftStopper.Wait()
