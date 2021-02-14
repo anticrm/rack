@@ -9,6 +9,7 @@ require (
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lni/dragonboat/v3 v3.2.8
 	github.com/lni/goutils v1.2.2
+	github.com/minio/minio-go/v7 v7.0.8
 	github.com/shirou/gopsutil v3.20.11+incompatible
 	github.com/stretchr/testify v1.5.1 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect

@@ -125,7 +125,7 @@ func (v Value) String() String { return String(v) }
 
 func (s String) Val(vm *VM) string { return vm.strings[s.Value().Val()] }
 
-func (vm *VM) allocString(s string) String {
+func (vm *VM) AllocString(s string) String {
 	pos := len(vm.strings)
 	vm.strings = append(vm.strings, s)
 	return makeString(pos)

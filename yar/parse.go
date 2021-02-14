@@ -89,7 +89,7 @@ func (vm *VM) Parse(s string) Block {
 					break
 				}
 			}
-			result.add(vm, vm.allocString(builder.String()).Value())
+			result.add(vm, vm.AllocString(builder.String()).Value())
 
 		default:
 			kind := WordNorm
